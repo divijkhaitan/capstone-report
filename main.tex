@@ -1,12 +1,13 @@
 \documentclass{article}
 \usepackage{graphicx} % Required for inserting images
 \usepackage{float}
-
+\usepackage[T1]{fontenc}
 \title{Analysing Overfitting in Deep Neural Networks}
 \author{Divij Khaitan}
 \date{\today}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\DeclareMathOperator{\softmax}{softmax}
 \begin{document}
 
     \maketitle
@@ -16,9 +17,9 @@
         
         The goal of this project is to provide a theoretical and practical analysis of the robustness properties of deep neural networks by analysing the patterns of neuron activations. 
         \subsection{Related work}
-            \textbf{Generalisation/Implicit Regularisation}: Zhang et. al. showed as early as 2016 that even AlexNet has enough capacity to fit all of imagenet with completely random labels perfectly when given enough time. This suggests that although networks have extremely high 'capacity', they do not use all of it in practice. This suggests that contrary to statistical wisdom, they are not overfitting as a result of overparameterisation. Arora et. al. showed that overparameterisation provides a speed up to the optimisation of neural networks, as well as generalisation bounds for two layer ReLU networks. Soltanolkotabi and Oymak showed that networks that polynomially overparameterised in the size of the input are resistant to label corrpution with the final parameters being close to their initialised values. 
+            \textbf{Generalisation/Implicit Regularisation}: Zhang et. al. showed as early as 2017 that even AlexNet has enough capacity to fit all of imagenet with completely random labels perfectly when given enough time \cite{zhang2017understandingdeeplearningrequires}. This suggests that although networks have extremely high 'capacity', they do not use all of it in practice. This suggests that contrary to statistical wisdom, they are not overfitting as a result of overparameterisation. Arora et. al. showed that overparameterisation provides a speed up to the optimisation of neural networks, as well as generalisation bounds for two layer ReLU networks \cite{pmlr-v80-arora18a}. Soltanolkotabi and Oymak showed that networks that polynomially overparameterised in the size of the input are resistant to label corrpution, with the final parameters being close to their initialised values \cite{pmlr-v108-li20j}. A major hypothesis in this area is that stochastic gradient descent(SGD) as a training method introduces an 'implicit regularisation' into the training of a deep network. Norm minimisation was first put forth by \cite{neyshabur2015searchrealinductivebias}, while \cite{arpit2017closerlookmemorizationdeep} showed that SGD behaves differently on noise as opposed to actual datasets, and that dropout works better than noise injection for hindering memorisation while promoting generalisation. Several notions of complexity have been put forth, including VC dimension and Rademacher complexity, see \cite{neyshabur2017implicitregularizationdeeplearning} for a more granular view of these. Examples where all matrix norms diverge were constructed in \cite{razin2020implicitregularizationdeeplearning}, indicating that the relationship between weight decay and implicit regularisation requires more inspection.
 
-            \textbf{Out of Distribution Detection}: When considering open world deployment of networks, it simply isn't possible to train them on exhaustive partition of every input they can expect. Thus, it becomes important to develop mechanisms that allow users to detect when an input is outside the training distribution of a model. 
+            \textbf{Out of Distribution Detection}: When considering open world deployment of networks, it simply isn't possible to train them on exhaustive partition of every input they can expect. Thus, it becomes important to develop mechanisms that allow users to detect when an input is outside the training distribution of a model. The first major work that tackled this problem with some effectiveness was \cite{hendrycks2018baselinedetectingmisclassifiedoutofdistribution}, which uses $-\max_i \softmax(f(x)_i)$ as a means of detecting if a particular input is outside the training distribution. This is analogous to treating the magnitude of the softmax output as a confidence measure, which isn't entirely accurate as pointed out by the authors. However, this has proven to be a baseline which is difficult to beat non-trivially. \cite{hendrycks2019deepanomalydetectionoutlier} describes a method for fine-tuning trained models to detect OOD inputs using unlabelled data and the KL divergence from a uniform distribution. ODIN \cite{liang2020enhancingreliabilityoutofdistributionimage} has empirically shown excellent performance on OOD detection, but requires tuning hyperparameters beforehand. 
             % TODO: Concept and Covariate Shift, add and explain literature
 
             \textbf{Activation Patterns of Neural Networks}: There has been some past work on analysing the patterns of activation of neural networks. On the side of interpretability, SUMMIT (citation) and NAP (citation) both attempt to identify 'important' neurons in an attempt to interpret the features associated with different classes. Similar ideas have been used for the detection of rare classes as well as the detection of misclassifications at test-time. Our work is more similar to the latter, however we take a different approach to analysing the patterns.  
@@ -306,4 +307,7 @@
     \end{figure}
     \section{Conclusion}
         
+    \bibliographystyle{plain}
+    \bibliography{references}
+
 \end{document}
