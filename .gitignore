@@ -1,0 +1,13 @@
+new
+Documents
+*.png
+*.txt
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.log
+*.fls
+*.bib
+*.gz
+*.synctex
