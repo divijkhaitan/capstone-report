@@ -132,49 +132,52 @@
             As eariler, we hypothesise that the number of significant interactions between neurons and weights are sparse, and that the sparsity increases with depth. To this end, we attempted to bin the proportions of the significance of each neuron-weight interaction. If the activations become more sparse, the number should be larger on the left and become sparse towards the end, which should be exacerbated by depth. 
             
         \subsection{KL Divergence Between Classes}
-            Building on the same experiment, we wanted to check both the entropies in between different classes over the activation distribution for the same layer. We also measured the same entropies at training and testing time, as well as an in and out of distribution dataset. The in-distribution dataset was the validation set for imagenet as used eariler, and the out of distribution dataset was fixed to be the imagenet-r dataset created by Hendrycks et. al.\cite{hendrycks2021facesrobustnesscriticalanalysis}. This is a collection of stylised versions of the standard classes of imagenet such as caricatures. This dataset has 200 classes compared to the original 1000 from imagenet, and to ensure the comparison was meaningful we sampled 50 classes from the dataset uniformly at random and computed the pairwise KL divergences between pairs of classes from the imagenet validation set, between pairs of classes from the imagenet-r set and between the same classes from imagenet and imagenet-r. 
+            Building on the same experiment, we wanted to check both the entropies in between different classes over the activation distribution for the same layer. We also measured the same entropies at training and testing time, as well as an in and out of distribution dataset. The in-distribution dataset was the validation set for imagenet as used eariler, and the out of distribution dataset was fixed to be the imagenet-r dataset created by Hendrycks et. al.\cite{hendrycks2021facesrobustnesscriticalanalysis}. This is a collection of stylised versions of the standard classes of imagenet such as caricatures. This dataset has 200 classes compared to the original 1000 from imagenet, and to ensure the comparison was meaningful we sampled 50 classes from the dataset uniformly at random and computed the pairwise KL divergences between pairs of classes from the imagenet validation set, between pairs of classes from the imagenet-r set and between the same classes from imagenet and imagenet-r. Along similar lines, we also measured the entropy of the distributions. Analagous to regression, the distance within the clusters(entropy) should decrease, while the distance between the clusters(KL-divergence) should increase. The entropy is given by the formula
+            \[H(X) = -\sum p(x)\log(p(x))\]
+            Where $p(x)$ is the probability that the random variable $X$ takes on the value $X$. Intuitively, it is a measure of 'disorder' in the random variable. The KL divergence is the relative entropy between 2 distributions, given by the formula 
+            \[D_{KL}(P||Q) = \sum P(x)\log(\frac{P(x)}{Q(x)})\]
+            This can be thought of as a measure of how well $P$ approximates $Q$. It is not a true metric, because it doesn't satisfy triangle inequality or symmetry. Our computations make a strong assumption of \textbf{independence} of the significance of activations, i.e. that any activation will be significant in it's own row is independent of the other events being significant. 
         
         \subsection{Memorisation and Significance}
-            We hypothesise that a network which has memorised it's training data would have significantly different properties in terms of sparsity and the separation of classes. To this end, we replicate the experiment specified in \cite{zhang2017understandingdeeplearningrequires} and train AlexNet on CIFAR10 until it reaches zero error. The details of the training stay the same and will be provided in Appendix A. 
+            We hypothesise that a network which has memorised it's training data would have significantly different properties in terms of sparsity and the separation of classes. To this end, we replicate the experiment specified in \cite{zhang2017understandingdeeplearningrequires} and train a modified version of AlexNet on CIFAR10 until it reaches zero error. The details of the training stay the same and will be provided in Appendix A. 
         
         \subsection{Adversarial Attacks}
             The above gives us a distribution on the activations for a given class. We compared the probabilities conditioned on the distribution of the class of the validation images subject when subjected to a PGD attack \cite{madry2019deeplearningmodelsresistant}. The parameters of the attack are given in Appendix B. 
         
         \subsection{Manifold Entaglement}
-            In the $n-1^{th}$ hidden layer, the manifolds for different classes should be linearly separable. This is because the following transformations are an affine hidden layer computation and a linear softmax computation. We estimate the dimensionality of the manifolds spanned by each class by inspecting the neurons for this layer, combining them into a matrix and finding it's rank. We further estimate the degree of overlap between the manifolds by combining the matrices for different classes and then applying the principle of inclusion and exclusion. Networks that have not overfir their training data should have manifolds with little overlap, while those which have should have entagled class manifolds. 
+            In the $n-1^{th}$ hidden layer, the manifolds for different classes should be linearly separable. This is because the following transformations are an affine hidden layer computation and a linear softmax computation. We estimate the dimensionality of the manifolds spanned by each class by inspecting the neurons for this layer, combining them into a matrix and finding it's rank. We further estimate the degree of overlap between the manifolds by combining the matrices for different classes and then applying the principle of inclusion and exclusion. Networks that have not overfit their training data should have manifolds with little overlap, while those which have should have entagled class manifolds. We additionally expect the manifolds to have smaller dimensionality for networks with better embeddings. 
 
     \section{Results}
         We examined the distributions for AlexNet, VGG, ResNet and InceptionV3. The experiments were run using PyTorch, and the weights for the pretrained versions of the networks were also taken from there. The datasets used was the validation set for Imagenet \cite{russakovsky2015imagenetlargescalevisual}, and CIFAR10 \cite{Krizhevsky2009LearningML}
         \subsection{Sparsity of Activations}
             The following plots have the number of times a neuron activated over the entire validation set divided by the length of the validation set on the x axis, and the y-axis is the number of neurons that activate in that 'bin', divided by the total number of neurons.
-            Inspecting the results from cifar10, the network fitting random labels has a distinct pattern to it's activations in the second-last layer. The random network has most neurons either always activating or never activating. The trained network is somewhat sparse in it's activations, while the overtrained network has more 'stray' neurons which fire infrequently compared to it's trained counterpart. 
-        
+            The results indicate that training encourages sparsity quite strongly, with the proportions of neurons that are always on dropping from 0.2 and 0.1 to 0.05 and $<$ 0.01 on the last and second last layers respectively from the untrained model to the best model. The network fitting random labels has an extremely sparse penultimate layer, with the best network having some density to it and the overtrained network resembling a mid-point in between the random labelled and the best network. 
             
             \begin{figure}[H]
                 \centering
                 \begin{minipage}{0.45\textwidth}
                     \centering
-                    \includegraphics[width=\linewidth]{new/small_alexnet_untrained/activation_proportions/0.png}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_untrained_cifar10/activation_proportions/cy_list_0.png}
                     \caption{Untrained}
                     % \label{fig:image1}
                 \end{minipage}
                 \hfill
                 \begin{minipage}{0.45\textwidth}
                     \centering
-                    \includegraphics[width=\linewidth]{new/small_alexnet_random_labels/activation_proportions/0.png}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_random_labels/activation_proportions/cy_list_0.png}
                     \caption{Random Labels}
                     % \label{fig:image2}
                 \end{minipage}
                 \begin{minipage}{0.45\textwidth}
                     \centering
-                    \includegraphics[width=\linewidth]{new/small_alexnet_250_epoch/activation_proportions/0.png}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_250_epoch/activation_proportions/cy_list_0.png}
                     \caption{Overtrained}
                     % \label{fig:image1}
                 \end{minipage}
                 \hfill
                 \begin{minipage}{0.45\textwidth}
                     \centering
-                    \includegraphics[width=\linewidth]{new/small_alexnet_best/activation_proportions/0.png}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_best/activation_proportions/cy_list_0.png}
                     \caption{Best}
                     % \label{fig:image2}
                 \end{minipage}
@@ -188,27 +191,27 @@
                 \centering
                 \begin{minipage}{0.45\textwidth}
                     \centering
-                    \includegraphics[width=\linewidth]{new/small_alexnet_untrained/activation_proportions/7.png}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_untrained_cifar10/activation_proportions/cy_list_7.png}
                     \caption{Untrained}
                     % \label{fig:image1}
                 \end{minipage}
                 \hfill
                 \begin{minipage}{0.45\textwidth}
                     \centering
-                    \includegraphics[width=\linewidth]{new/small_alexnet_random_labels/activation_proportions/7.png}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_random_labels/activation_proportions/cy_list_7.png}
                     \caption{Random Labels}
                     % \label{fig:image2}
                 \end{minipage}
                 \begin{minipage}{0.45\textwidth}
                     \centering
-                    \includegraphics[width=\linewidth]{new/small_alexnet_250_epoch/activation_proportions/7.png}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_250_epoch/activation_proportions/cy_list_7.png}
                     \caption{Overtrained}
                     % \label{fig:image1}
                 \end{minipage}
                 \hfill
                 \begin{minipage}{0.45\textwidth}
                     \centering
-                    \includegraphics[width=\linewidth]{new/small_alexnet_best/activation_proportions/7.png}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_best/activation_proportions/cy_list_7.png}
                     \caption{Best}
                     % \label{fig:image2}
                 \end{minipage}
@@ -217,17 +220,17 @@
                 % \caption{Activation Proportions from the class Frog on (from left to right) the last and second last layers for the random labels and the last and second last layers clean labels respectively}
                 \label{fig:class_frog}
             \end{figure}
-            Below are the results for the last 3 layers of alexnet on imagenet and imagenet-r, both trained and untrained. For AlexNet, we can see that the randomly initialised network looks the same in terms of activation proportions for all the layers across both datasets which is to be expected. We see that training encourages sparsity in the network, with the networks having a lower proportion of neurons having an activation proportion of 1 post training. While the second layer shows a smooth decay in both cases, the last and third last layers have much smoother curves for the activations than the OOD networks. The first is monotonically increasing, while the last layer shows a sharp drop off towards the right side of the graph.
+            Below are the results for the last 3 layers of alexnet on imagenet and imagenet-r, both trained and untrained. For AlexNet, we can see that the randomly initialised network looks the same in terms of activation proportions for all the layers across both datasets as expected. We once again see that training encourages sparsity in the network, even on the out of distribution set. While both classes are indistinguishable on the final and third-last layers, the in-distribution dataset is sparser on the final layer and the penultimate layer. In fact, there is a significant increase in the proportion of stray activations on the out of distribution dataset, suggesting that sparsity may be a characteristic of the neuron activations. 
             \begin{figure}[H]
                 \centering
                 \begin{minipage}{\textwidth}
                     \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_untrained/activation_proportions/n02088466.png}
+                    \includegraphics[width=\textwidth]{new/alexnet_untrained_imgr_out/activation_proportions/n02088466.png}
                     
                 \end{minipage}\hfill
                 \begin{minipage}{\textwidth}
                     \centering
-                    \includegraphics[width=\textwidth]{new/alexnet/activation_proportions/n02088466.png}
+                    \includegraphics[width=\textwidth]{new/alexnet_imgr_out/activation_proportions/n02088466.png}
                 \end{minipage}
                 \begin{minipage}{\textwidth}
                     \centering
@@ -271,8 +274,8 @@
     
     % \section{Patterns of Activation in Neuron-Weight Interactions}
 
-        \subsection{Inter-Class Divergences of Neuron Weight Interactions}
-            Below are the results for the KL-divergences of alexnet normalised corrected for the dimensionality of the space. Between initialisation and the end of training on the in-distribution dataset, we see that the separation of classes increases greatly . The classes becoming more separated is a sign that the network is learning something meaningful about them. However, this also true for the OOD dataset, so this doesn't tell the complete story. 
+        \subsection{Divergences of Neuron Weight Interactions}
+            Below are the results for the KL-divergences of alexnet normalised corrected for the dimensionality of the space. Each row represents the KL divergence from a class, while a column represents the KL divergences to a class. The values on the diagonals for KL divergence would have been 0 and we plot the entropy of the distribution for that class instead.  Between initialisation and the end of training on the in-distribution dataset, we see that the separation of classes increases greatly, while the entropy of the class distributions decreases simultneously. This decrease is much more noticable at the deeper layers of the network, and also extremely telling between the networks for the in-distribution classes and out of distribution classes. The OOD classes become more separated from each other but their entropies see no decrease after training is complete, even seeing significant increases in some cases. 
             % KL Matrix In Distribution
             \begin{figure}[H]
                 \centering
@@ -345,7 +348,7 @@
                 \label{fig:kl_divergences_r}
 
             \end{figure}
-            Now, we inspect the effect of training on the separation between a class and its OOD counterpart. This decreases over the course of training, which means that the neuron activation distributions for a class and its OOD counterpart become more similar. Additionally, the OOD distribution has a larger divergence from the ID distribution than the other way around. This would suggest that the OOD distribution is more chaotic than its ID counterpart, which is as expected. 
+            Inspecting the divergences between classes and their OOD counterparts before and after training shows that the separation of the same class inside and outside the distribution decreases. The distributions becoming more similar might suggest that the model is in fact learning some characteristics common to across the training distribution. . Additionally, the OOD distribution has a larger divergence from the ID distribution than the other way around. This would suggest that the OOD distribution is more chaotic than its ID counterpart, which is as expected. This is another difference that is more pronounced at the deeper layers, since as we saw earlier the entropy of the in-distribution activations reduces with depth. 
             
             \begin{figure}[H]
                 \centering
@@ -360,30 +363,27 @@
                 \end{minipage}
                 \begin{minipage}{0.45\textwidth}
                     \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out_second_last__r_second_last_untrained/kl_div_imgr_out_second_last_to_r_second_last_last_pairwise.png}
+                    \includegraphics[width=\textwidth]{/home/divijkhaitan/capstone_report/new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_untrained_second_last/kl_div_imgr_out_to_r_pairwise.png}
                     
                 \end{minipage}\hfill
                 \begin{minipage}{0.45\textwidth}
                     \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out_second_last__r_second_last_trained/kl_div_imgr_out_second_last_to_r_second_last_last_pairwise.png}
+                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_trained_second_last/kl_div_imgr_out_to_r_pairwise.png}
                 \end{minipage}
                 \begin{minipage}{0.45\textwidth}
                     \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out_third_last__r_third_last_untrained/kl_div_imgr_out_third_last_to_r_third_last_last_pairwise.png}
+                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_untrained_third_last/kl_div_imgr_out_to_r_pairwise.png}
                     
                 \end{minipage}\hfill
                 \begin{minipage}{0.45\textwidth}
                     \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out_third_last__r_third_last_trained/kl_div_imgr_out_third_last_to_r_third_last_last_pairwise.png}
+                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_trained_third_last/kl_div_imgr_out_to_r_pairwise.png}
                 \end{minipage}
                 \caption{KL divergences from the in-distribution classes to the out of distribution classes untrained(left) and trained(right). From top to bottom, these are for the final layer, the second last layer and the third last layer}
                 \label{fig:cross_kl_divergence_a_to_b}
             
             \end{figure}
             
-            For the CIFAR10 networks, we see that the difference between the network at a random initialisation compared to the network fitting random labels are extremely similar. The clean network is similar in the relative difference between classes, but has a much higher degree of separation between classes. For the overtrained network compared to its 'best-fit' counterpart, we see the same similar pattern, but we also see that the divergences are significantly smaller. This suggests that the overtraining is causing the model to 'forget' the relationships between classes which makes them similar. 
-            
-            % Pairwise KL Out vs In
             \begin{figure}[H]
                 \centering
                 \begin{minipage}{0.45\textwidth}
@@ -397,26 +397,26 @@
                 \end{minipage}
                 \begin{minipage}{0.45\textwidth}
                     \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out_second_last__r_second_last_untrained/kl_div_r_second_last_to_imgr_out_second_last_last_pairwise.png}
+                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_untrained_second_last/kl_div_r_to_imgr_out_pairwise.png}
                     
                 \end{minipage}\hfill
                 \begin{minipage}{0.45\textwidth}
                     \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out_second_last__r_second_last_trained/kl_div_r_second_last_to_imgr_out_second_last_last_pairwise.png}
+                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_trained_second_last/kl_div_r_to_imgr_out_pairwise.png}
                 \end{minipage}
                 \begin{minipage}{0.45\textwidth}
                     \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out_third_last__r_third_last_untrained/kl_div_r_third_last_to_imgr_out_third_last_last_pairwise.png}
+                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_untrained_third_last/kl_div_r_to_imgr_out_pairwise.png}
                     
                 \end{minipage}\hfill
                 \begin{minipage}{0.45\textwidth}
                     \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out_third_last__r_third_last_trained/kl_div_r_third_last_to_imgr_out_third_last_last_pairwise.png}
+                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_trained_third_last/kl_div_r_to_imgr_out_pairwise.png}
                 \end{minipage}
                 \caption{KL divergences from the out-of-distribution classes to the in distribution classes untrained(left) and trained(right). From top to bottom, these are for the final layer, the second last layer and the third last layer}
                 \label{fig:cross_kl_divergence_b_to_a}
             \end{figure}
-        
+            For the cifar10 networks, we see that the entropy is larger than the separation at initialisation which is to be expected, but training on random labels greatly increases the entropy of the distribution with negligible difference in the inter class separation. For the best and overtrained networks, we see almost identical patterns of separation between classes, with the magnitude being much smaller for the network. The decrease in relative separation might suggest that the network is 'forgetting' the relationships between classes and making the distributions more similar. 
             \begin{figure}[H]
                 \centering
                 \begin{minipage}{0.25\textwidth}
@@ -442,46 +442,56 @@
                 \label{fig:cross_kl_divergence_small_alexnet}
             \end{figure}
         
-        % \subsection{Adversarial Attacks and Probability Distributions}
-        %     Presented below are the results for just the modified version of AlexNet on CIFAR10, because running this would not be meaningful on an untrained network or an OOD dataset. The results for the version of the network on random labels compared to the version trained to convergence normally are presented below. 
+        \subsection{Adversarial Attacks and Probability Distributions}
+            Presented below are the results for just the modified version of AlexNet on CIFAR10, because running this would not be meaningful on an untrained network or an OOD dataset. The results for the version of the network on random labels compared to the version trained to convergence normally are presented below. 
         
-        %     We see that on the network with random labels, there is no consistent effect that the attack seems to have. Some classes see a sharp increase in the probabilities under the class distribution, while some see a decrease. On the trained network, however, we see a consistent decrease in likelihood under the class distribution from the clean samples to the adversarial samples. 
+            We see that on the network with random labels, there is no consistent effect that the attack seems to have. Some classes see a sharp increase in the probabilities under the class distribution, while some see a decrease. On the trained network, however, we see a consistent decrease in likelihood under the class distribution from the clean samples to the adversarial samples. 
             
-        %     \begin{figure}[H]
-        %         \centering
+            \begin{figure}[H]
+                \centering
+                \begin{minipage}{0.45\textwidth}
+                    \centering
+                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_random_labels/probability_results/adversarial_probability_comparison.png}
+                \end{minipage}
             
-        %         \begin{minipage}{0.45\textwidth}
-        %             \centering
-        %             \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_250_epoch/probability_results/adversarial_probability_comparison.png}
+                \begin{minipage}{0.45\textwidth}
+                    \centering
+                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_250_epoch/probability_results/adversarial_probability_comparison.png}
                     
-        %         \end{minipage}\hfill
-        %         \begin{minipage}{0.45\textwidth}
-        %             \centering
-        %             \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best/probability_results/adversarial_probability_comparison.png}
-        %         \end{minipage}
+                \end{minipage}\hfill
+                \begin{minipage}{0.45\textwidth}
+                    \centering
+                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best/probability_results/adversarial_probability_comparison.png}
+                \end{minipage}
             
-        %         \caption{Adversarial Probability Comparison for different classes for the random network(left) and the clean network(right)}
-        %         \label{fig:adversarial_probabilities_small_alexnet}
-        %     \end{figure}
+                \caption{Adversarial Probability Comparison for different classes for the random network(top), best network(left) and the overtrained network (right)}
+                \label{fig:adversarial_probabilities_small_alexnet}
+            \end{figure}
 
-        % \subsection{Manifold Entanglement}
-        %     The difference between the manifolds for both networks is quite stark. The random network not only has significant overlap between classes, the manifolds also have much higher rank. The clean network doesn't see any overlap at all, and has lower rank manifolds. This lines up with the hypothesis of the low rank structure.   
-        %     \begin{figure}[H]
-        %         \centering
-            
-        %         \begin{minipage}{0.45\textwidth}
-        %             \centering
-        %             \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_250_epoch/probability_results/pca_overlap_heatmap.png}
+        \subsection{Manifold Entanglement}
+            The difference between the manifolds for both networks is quite stark. The random network not only has significant overlap between classes, the manifolds also have much higher rank. The clean network doesn't see any overlap at all, and has lower rank manifolds. Additionally, we see that the overtrained manifold has several classes actually increase in rank. This lines up with the hypothesis of the 'optimal' solution being a substructure with lower rank. 
+            \begin{figure}[H]
+                \centering
+                
+                \begin{minipage}{0.45\textwidth}
+                    \centering
+                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_random_labels/probability_results/pca_overlap_heatmap.png}
                     
-        %         \end{minipage}\hfill
-        %         \begin{minipage}{0.45\textwidth}
-        %             \centering
-        %             \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best/probability_results/pca_overlap_heatmap.png}
-        %         \end{minipage}
+                \end{minipage}\hfill
+                
+                \begin{minipage}{0.45\textwidth}
+                    \centering
+                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_250_epoch/probability_results/pca_overlap_heatmap.png}
+                    
+                \end{minipage}\hfill
+                \begin{minipage}{0.45\textwidth}
+                    \centering
+                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best/probability_results/pca_overlap_heatmap.png}
+                \end{minipage}
             
-        %         \caption{Pairwise Entaglements for different classes for the random network(left) and the clean network(right)}
-        %         \label{fig:manifold_entanglement_small_alexnet}
-        %     \end{figure}
+                \caption{Pairwise Entaglements for different classes for the random network(left) and the clean network(right)}
+                \label{fig:manifold_entanglement_small_alexnet}
+            \end{figure}
         
     \section{Conclusion}
         The above results present a new way of looking at and analysing a trained neural network. We analyse the distributions of class activations and the effect of training on their evolution. We also analyse the change in probability under an adversarial attack and the entanglement of class manifolds under different conditions. We believe that as an evaluation framework, this is more robust to overfitting by inspecting the similarities at higher layers as well as lower layers. We find that this framework is able to pick up on evidence of overfitting, forgetting and registers different behaviours for in-distribution data and OOD data. We are also notice significant deviations from the in-distribution counterparts of out-of-distribution classes. 
