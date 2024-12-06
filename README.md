@@ -1,7 +1,7 @@
 # capstone-report
 
 TODO:
-Add results for neurons
-Add results for other networks
-Conclusion unclear from sparsity plots
-Plotted layers as heatmaps, not sure if there is any value to them
+1. Add results for neurons  
+2. Add results for other networks  
+3. Conclusion unclear from adversarial portion and manifolds  
+4. Plotted layers as heatmaps, do not think there is any insight gained from them  
