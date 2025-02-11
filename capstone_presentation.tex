@@ -1,0 +1,921 @@
+\documentclass{beamer}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{float}
+\usepackage[T1]{fontenc}
+\title{Analysing the Robustness of Deep Neural Networks}
+\author{Divij Khaitan}
+\date{\today}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{subcaption}
+\usepackage[backend=biber]{biblatex}
+\addbibresource{references.bib}
+
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\softmax}{softmax}
+
+\begin{document}
+    \begin{frame}
+        \maketitle
+    \end{frame}
+    
+    % \begin{frame}{Background: Overfitting}
+    % \includegraphics[width=0.6\textwidth]{overfitting_example.png}
+    % Image credits: Wikipedia
+    % \end{frame}
+    
+    \begin{frame}{Background: Overfitting}
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{0.3\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{underfit.png}
+                \subcaption{Underfit}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.3\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{best_fit.png}
+                \subcaption{Best Fit}
+                % \label{fig:image2}
+            \end{minipage}
+            \begin{minipage}{0.3\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{overfit.png}
+                \subcaption{Overfit}
+                % \label{fig:image1}
+            \end{minipage}
+            
+            \caption{Examples of overfitting data from a third degree polynomial}
+            \label{fig:overfitting}
+        \end{figure}
+    \end{frame}
+
+    % \begin{frame}{Overfitting}
+    %     \begin{itemize}
+    \setlength\itemsep{1em}
+    %         \item 
+    %             Comes from mathematical modelling
+    %         \item 
+    %             Very complex models capture spurious relationships
+    %         \item 
+    %             Rule of thumb $\#(\text{parameters}) > \#(\text{datapoints})$
+    %         \item 
+    %             Analogous to interpolating a polynomial of degree higher than $n$ with $n$ datapoints
+    %     \end{itemize}
+    % \end{frame}
+
+    \begin{frame}{Modern ML}
+        \begin{itemize}
+            \setlength\itemsep{1em}
+            \item 
+                Alexnet : \#(parameters) $\approx \; 4 \times 10^5$
+            \item 
+                Achieves about $60\%$ accuracy on Imagenet 1K with $\approx$ 1.3 million images
+            \item 
+                ResNet-50 ($2.5 \times 10^7$) parameters, $76\%$ accuracy
+            \item 
+                Is this network overfitting?
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Rethinking Generalisation}
+        \begin{itemize}
+            \setlength\itemsep{1em}
+            \item 
+                Fitting networks to random labels eventually reaches zero training error, even with random pixels (\cite{zhang2017understandingdeeplearningrequires}, \cite{arpit2017closerlookmemorizationdeep})
+            \item 
+                Models have enough capacity to shatter the training set, yet learn patterns when available
+            \item 
+                Conclusion: Resistance to overfitting or bias towards simple hypotheses
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Manifold Hypothesis}
+
+        \includegraphics[width=\textwidth]{manifold.png}
+        
+        \begin{itemize}
+            \setlength\itemsep{1em}
+            \item 
+                Pre-dates deep learning
+            \item 
+                Data consists of substructures with much smaller dimension than the ambient space
+            \item 
+                Valuable as a heuristic, basis of most dimensionality reduction algorithms
+        \end{itemize}
+    \end{frame}
+    
+    \begin{frame}{Existing Work on Activation Patterns}
+        \begin{itemize}
+            \setlength\itemsep{1em}
+            \item 
+                Interpretability: \cite{stano2020explainingpredictionsdeepneural} fits a gaussian mixture, binarises and uses the hamming distance to support predictions, \cite{bauerle2022neuralactivationpatternsnaps} is a tool to visualise activation patterns as they relate to features
+            \item 
+                OOD detection: Using specific patterns of activation and associating them with each class, \cite{lee2018simpleunifiedframeworkdetecting} fits a multivariate gaussian to each class in the embedding space and the mahanlanobis distance from an activation pattern to support decisions
+            \item 
+                Idea of fitting distributions to activations for uncertainty quantification is common
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Our Contributions}
+        \begin{itemize}
+            \setlength\itemsep{1em}
+            \item 
+                Analyse the activations at a finer granularity
+            \item 
+                Introduce a notion of significance into neuron activations
+            \item 
+                Distributions over classes provide better characterisation of OOD data than manifold interpretation
+            \item 
+                Measure for robustness 
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Neuron-Weight Interactions}
+        Every product of a neuron from the previous layer with a weight from the next layer. 
+        Given an activation vector $x \in \mathbb{R}^{n_{in} \times 1}$ and a weight matrix $W \in \mathbb{R}^{n_{out} \times n_{in}}$ 
+        \[
+            \begin{bmatrix}
+                w_{1,1} & \dots & w_{1,n_{in}} \\
+                \vdots & \ddots & \vdots \\
+                w_{n_{out}, 1} & \cdots & w_{n_{out}, n_{in}} \\
+            \end{bmatrix}
+            \begin{bmatrix}
+                x_1 \\
+                \vdots \\
+                x_{n_{in}} \\
+            \end{bmatrix}
+            = 
+            \begin{bmatrix}
+                \sum_{i=1}^{n_in} w_{1,i}x_i\\
+                \vdots \\
+                \sum_{i=1}^{n_in} w_{n_{out},i}x_i\\
+            \end{bmatrix}
+        \]
+    \end{frame}
+
+    \begin{frame}{Neuron-Weight Interactions}
+        To study every term in each summation individually, a vector of 1s needs to be factored out.
+        \[
+            W\diag(x_1, \dots, x_n)    
+            = 
+            \begin{bmatrix}
+                w_{1, 1}x_1 & \dots & w_{1, n_{in}}x_{n_{in}} \\
+                \vdots & \ddots & \vdots \\
+                w_{n_{out}, 1}x_1 & \dots & w_{n_{out}, n_{in}}x_{n_{in}}
+            \end{bmatrix}
+        \]
+    \end{frame}
+    
+    \begin{frame}{Significance of Neuron Weight Interactions}
+        An interaction is considered significant if it is large relative to the magnitude of the neuron value, corrected for the input dimension. Formally 
+        \[S_{ij} = 1 \text{ if } |x_{ij}| > \frac{|\sum_j x_{ij}|}{n_{in}} \]
+
+    \end{frame}
+
+    \begin{frame}{Activation Distributions}
+        \begin{itemize}
+            \setlength\itemsep{1em}
+            \item 
+                Modelled binary on-off values for each interaction in the linear layers as independent bernoulli random variables
+            \item 
+                Measured KL divergence and entropy for distributions
+            \item 
+                Can be seen as analogues to the cluster radius and distances
+            \item 
+                Our current methodology over-estimates the separation between classes
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Sparsity of Neuron Activations}
+        \begin{itemize}
+            \setlength\itemsep{1em}
+            \item 
+                Practically, pruning techniques can drastically decrease the size of neural networks
+            \item 
+                Indicates that a small part of the network is important
+            \item 
+                Lottery Ticket Hypothesis and related work focuses on identiying sparse structures early on in training
+            \item 
+                Activations should be sparse
+        \end{itemize}
+    \end{frame}
+
+
+    \begin{frame}{KL Divergence and Entropy}
+        \begin{itemize}
+            \setlength\itemsep{1em}
+            \item 
+                Entropy of a distribution is a measure of the amount of information encoded in a random variable
+                \[H(X) = -\sum_x p(x)\log(p(x))\]
+            \item 
+                KL divergence is the relative entropy between 2 variables, i.e. the amount of additional information needed to transform an encoding of P to one of Q
+                \[KL(P||Q) = \sum_x P(x)\log(\frac{P(x)}{Q(x)})\]
+            \item 
+                KL divergence isn't a metric, satisfies nonnegavity but not symmetry or triangle inequality
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Histogram Distance}
+        \includegraphics[width=\textwidth]{histogram_distance.png}
+    \end{frame}
+
+    % \begin{frame}{Detecting Adversarial Attacks}
+    %     \begin{itemize}
+    % \setlength\itemsep{1em}
+    %         \item 
+    %             Adversarial attacks are small changes to an image that alter it's predicted class, often with a high output probability
+    %         \item 
+    %             We computed the probabilities of the observed activation pattern under the 
+    %     \end{itemize}
+    % \end{frame}
+
+    \begin{frame}{Estimating Dimensions of a Manifold}
+        \begin{itemize}
+            \setlength\itemsep{1em}
+            \item 
+                Extracted the output of the final hidden layer (embedding), and computed the dimensionality of the manifolds for each class
+            \item 
+                Final layer activations must be linearly separable 
+            \item 
+                Computed using principal components upto 95\% explained variance
+            \item 
+                Measured pairwise entangled classes by computing the rank of the matrix created by the union of PCs
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Overview of Framework}
+        \begin{itemize}
+            \item 
+                Distributions over neuron-weight interactions: Increase in the separation between classes $\implies$ developing a distinct idea for each class
+            \item 
+                Sparse Activations: Small number of frequent firings, large number of random firings
+            \item 
+                OOD Data: Natural probabilistic definition of out-of-distribution data rather than geometric definition as with manifolds
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Models and Datasets}
+        \begin{itemize}
+            \setlength\itemsep{1em}
+            \item 
+                The tests were run on AlexNet, with the pretrained version trained on ImageNet coming from PyTorch
+            \item 
+                Could not run for higher layers for other networks because of storage restrictions
+            \item 
+                Compared behaviour of network on OOD dataset imagenet-r \cite{hendrycks2021facesrobustnesscriticalanalysis}
+            \item 
+                Also reproduced Modified AlexNet experiment on CIFAR10 from \cite{zhang2017understandingdeeplearningrequires}, for random and normal labels
+            \item 
+                Have 4 versions of modified AlexNet, best model (smallest validation error), overtrained model (run for 250 epochs on clean labels), random labels (0 error on CIFAR10) and untrained (initialised network with no training)
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Results: Sparsity - CIFAR10}
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{0.45\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_untrained_cifar10/activation_proportions/0.png}
+                \subcaption{Untrained}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.45\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_random_labels/activation_proportions/0.png}
+                \subcaption{Random Labels}
+                % \label{fig:image2}
+            \end{minipage}
+            \begin{minipage}{0.45\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_250_epoch/activation_proportions/0.png}
+                \subcaption{Overtrained}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.45\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_best/activation_proportions/0.png}
+                \subcaption{Best}
+                % \label{fig:image2}
+            \end{minipage}
+            \hfill
+            
+            \caption{Activation Proportions from the class Airplane on the last and second last layers on different versions of the Modified AlexNet}
+            \label{fig:class_airplane}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{Results: Sparsity - CIFAR10}
+        \begin{itemize}
+            \setlength\itemsep{1em}
+            \item 
+                Training encourages sparsity 
+            \item 
+                Proportions of neurons that are always active drops 
+            \item     
+                Random labels has an extremely sparse penultimate layer, best is still sparse but denser than random 
+            \item 
+                Overtrained network a mid-point in between random labels and best
+        \end{itemize}
+    \end{frame}
+    
+    \begin{frame}{Results: Sparsity - Imagenet and imagenet-r}
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{0.45\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_untrained_imgr_out/activation_proportions/n01677366.png}
+                \subcaption{Untrained Imagenet}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.45\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_imgr_out/activation_proportions/n01677366.png}
+                \subcaption{Trained Imagenet}
+                % \label{fig:image2}
+            \end{minipage}
+            \begin{minipage}{0.45\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_untrained_r/activation_proportions/n01677366.png}
+                \subcaption{Untrained imagenet-r}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.45\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_r/activation_proportions/n01677366.png}
+                \subcaption{Trained imagenet-r}
+                % \label{fig:image2}
+            \end{minipage}
+            \hfill
+            
+            \caption{Activation Proportions from the class iguana on the last three layers on images from imagenet and imagenet-r on the trained and untrained alexnet models}
+            \label{fig:alexnet_sparsity}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{Results: Sparsity - Imagenet}
+        \begin{itemize}
+            \setlength\itemsep{1em}
+            \item 
+                Untrained looks the same for ID and OOD
+            \item 
+                ID set sparser on last two layers 
+            \item     
+                More stray activations on the last two layers for the OOD set 
+        \end{itemize}
+    \end{frame}
+    
+    \begin{frame}{Results: Distances between distributions - CIFAR10}
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_untrained_cifar10/out_matrices/small_alexnet_kl_matrix.png}
+                \subcaption{Untrained}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_random_labels/out_matrices/small_alexnet_kl_matrix.png}
+                \subcaption{Random Labels}
+                % \label{fig:image2}
+            \end{minipage}
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_250_epoch/out_matrices/small_alexnet_kl_matrix.png}
+                \subcaption{Overtrained}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_best/out_matrices/small_alexnet_kl_matrix.png}
+                \subcaption{Best}
+                % \label{fig:image2}
+            \end{minipage}
+            \hfill
+            
+            \caption{Activation Proportions from the class Airplane on the last and second last layers on different versions of the Modified AlexNet}
+            \label{fig:small_alexnet_kl_matrix}
+        \end{figure}
+    \end{frame}
+    
+    \begin{frame}{Results: Distances between distributions - CIFAR10}
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_untrained_cifar10_second_last/out_matrices/small_alexnet_kl_matrix.png}
+                \subcaption{Untrained}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_random_labels_second_last/out_matrices/small_alexnet_kl_matrix.png}
+                \subcaption{Random Labels}
+                % \label{fig:image2}
+            \end{minipage}
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_250_epoch_second_last/out_matrices/small_alexnet_kl_matrix.png}
+                \subcaption{Overtrained}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_best_second_last/out_matrices/small_alexnet_kl_matrix.png}
+                \subcaption{Best}
+                % \label{fig:image2}
+            \end{minipage}
+            \hfill
+            
+            \caption{Activation Proportions from the class Airplane on the last and second last layers on different versions of the Modified AlexNet}
+            \label{fig:small_alexnet_kl_matrix_second_last}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{Results: Changes in Divergence - CIFAR10}
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{0.22\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/untrained_random_cifar10.png}
+                \subcaption{Untrained and Random Last Layer}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.22\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/best_overtrained_cifar10.png}
+                \subcaption{Best and Overtrained Last Layer}
+                % \label{fig:image2}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.22\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/untrained_random_cifar10_second_last.png}
+                \subcaption{Untrained and Random Second Last Layer}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.22\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/best_overtrained_cifar10_second_last.png}
+                \subcaption{Best and Overtrained Second Last Layer}
+                % \label{fig:image2}
+            \end{minipage}
+            \hfill
+            \caption{Changes in the KL divergence over the course of training}
+            \label{fig:small_alexnet_kl_differences}
+        \end{figure}
+    \end{frame}
+    
+
+    \begin{frame}{Results: Distances Between Distributions}
+        \begin{itemize}
+            \setlength\itemsep{1em}
+            \item 
+                Training makes classes more separated
+            \item 
+                Entropy of distributions decreases in lower layers, increases in upper layers
+            \item 
+                Overtraining and normal labels look indentical with a lower spread for the overtrained network, suggesting that overtraining makes the distributions more similar
+            \item 
+                Random labels and untrained have no relative difference in the separation and entropy of distributions. 
+        \end{itemize}        
+    \end{frame}
+
+    \begin{frame}{Results: Distances between distributions - Imagenet}
+        % Pairwise heatmaps for the last layer 
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_untrained_imgr_out/out_matrices/alexnet_kl_matrix.png}
+                \subcaption{Untrained Last}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_untrained_imgr_out_second_last/out_matrices/alexnet_kl_matrix.png}
+                \subcaption{Untrained Second Last}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_untrained_imgr_out_third_last/out_matrices/alexnet_kl_matrix.png}
+                \subcaption{Untrained Third Last}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_imgr_out/out_matrices/alexnet_kl_matrix.png}
+                \subcaption{Trained Last}
+                % \label{fig:image2}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_imgr_out_second_last/out_matrices/alexnet_kl_matrix.png}
+                \subcaption{Trained Second Last}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_imgr_out_third_last/out_matrices/alexnet_kl_matrix.png}
+                \subcaption{Trained Third Last}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            
+            \caption{KL Divergence Heatmaps on imagenet for Alexnet}
+            \label{fig:alexnet_imgr_heatmaps}
+        \end{figure}
+    \end{frame}
+    
+    \begin{frame}{Results: Changes in Divergence - Imagenet}
+        % Pairwise heatmaps for the last layer 
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/untrained_trained_imgr.png}
+                \subcaption{Last Layer}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/untrained_trained_imgr_second_last.png}
+                \subcaption{Second Last Layer}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/untrained_trained_imgr_third_last.png}
+                \subcaption{Third Last Layer}
+                % \label{fig:image1}
+            \end{minipage}
+            \caption{Changes in KL divergence on imagenet for Alexnet}
+            \label{fig:change_alexnet_imgr_heatmaps}
+        \end{figure}
+    \end{frame}
+    
+
+    \begin{frame}{Results: Distances between distributions - imagenet-r}
+        % Pairwise heatmaps for the last layer 
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_untrained_r/out_matrices/alexnet_kl_matrix.png}
+                \subcaption{Untrained Last}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_untrained_r_second_last/out_matrices/alexnet_kl_matrix.png}
+                \subcaption{Untrained Second Last}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_untrained_r_third_last/out_matrices/alexnet_kl_matrix.png}
+                \subcaption{Untrained Third Last}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_r/out_matrices/alexnet_kl_matrix.png}
+                \subcaption{Trained Last}
+                % \label{fig:image2}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_r_second_last/out_matrices/alexnet_kl_matrix.png}
+                \subcaption{Trained Second Last}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_r_third_last/out_matrices/alexnet_kl_matrix.png}
+                \subcaption{Trained Third Last}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            
+            \caption{KL Divergence Heatmaps on imagenet-r for Alexnet}
+            \label{fig:alexnet_r_heatmaps}
+        \end{figure}
+    \end{frame}
+    
+    \begin{frame}{Results: Changes in Divergence - imagenet-r}
+        % Pairwise heatmaps for the last layer 
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/untrained_trained_r.png}
+                \subcaption{Last Layer}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/untrained_trained_r_second_last.png}
+                \subcaption{Second Last Layer}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/untrained_trained_r_third_last.png}
+                \subcaption{Third Last Layer}
+                % \label{fig:image1}
+            \end{minipage}
+            \caption{Changes in KL divergence on imagenet-r for Alexnet}
+            \label{fig:change_alexnet_r_heatmaps}
+        \end{figure}
+    \end{frame}
+    
+
+    \begin{frame}{Results: Distances Between Distributions - Imagenet}
+        \begin{itemize}
+            \setlength\itemsep{1em}
+            \item 
+               Entropy of OOD class distributions sees no significant drop after training
+            \item 
+                The OOD distributions increase in separation, but the magnitude of the change is much smaller
+        \end{itemize}        
+    \end{frame}
+
+    % \begin{frame}{Results: Paiwise Distances between distributions on Imagenet-R and Imagenet}
+    %     Pairwise heatmaps for the last layer 
+        
+    % \end{frame}
+    
+    \begin{frame}{Results: Distances between distribution histograms - CIFAR10}
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_untrained_cifar10/out_matrices/small_alexnet_intersection_matrix.png}
+                \subcaption{Untrained}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_random_labels/out_matrices/small_alexnet_intersection_matrix.png}
+                \subcaption{Random Labels}
+                % \label{fig:image2}
+            \end{minipage}
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_250_epoch/out_matrices/small_alexnet_intersection_matrix.png}
+                \subcaption{Overtrained}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_best/out_matrices/small_alexnet_intersection_matrix.png}
+                \subcaption{Best}
+                % \label{fig:image2}
+            \end{minipage}
+            \hfill
+            
+            \caption{Activation Proportions from the class Airplane on the last and second last layers on different versions of the Modified AlexNet}
+            \label{fig:small_alexnet_intersection_matrix}
+        \end{figure}
+    \end{frame}
+    
+    \begin{frame}{Results: Distances between distribution histograms - CIFAR10}
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_untrained_cifar10_second_last/out_matrices/small_alexnet_intersection_matrix.png}
+                \subcaption{Untrained}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_random_labels_second_last/out_matrices/small_alexnet_intersection_matrix.png}
+                \subcaption{Random Labels}
+                % \label{fig:image2}
+            \end{minipage}
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_250_epoch_second_last/out_matrices/small_alexnet_intersection_matrix.png}
+                \subcaption{Overtrained}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_best_second_last/out_matrices/small_alexnet_intersection_matrix.png}
+                \subcaption{Best}
+                % \label{fig:image2}
+            \end{minipage}
+            \hfill
+            
+            \caption{Activation Proportions from the class Airplane on the last and second last layers on different versions of the Modified AlexNet}
+            \label{fig:small_alexnet_intersection_matrix_second_last}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{Results: Distances between distribution histograms - Imagenet}
+        % Pairwise heatmaps for the last layer 
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_untrained_imgr_out/out_matrices/alexnet_intersection_matrix.png}
+                \subcaption{Untrained Last}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_untrained_imgr_out_second_last/out_matrices/alexnet_intersection_matrix.png}
+                \subcaption{Untrained Second Last}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_untrained_imgr_out_third_last/out_matrices/alexnet_intersection_matrix.png}
+                \subcaption{Untrained Third Last}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_imgr_out/out_matrices/alexnet_intersection_matrix.png}
+                \subcaption{Trained Last}
+                % \label{fig:image2}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_imgr_out_second_last/out_matrices/alexnet_intersection_matrix.png}
+                \subcaption{Trained Second Last}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_imgr_out_third_last/out_matrices/alexnet_intersection_matrix.png}
+                \subcaption{Trained Third Last}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            
+            \caption{KL Divergence Heatmaps on imagenet for Alexnet}
+            \label{fig:alexnet_imgr_histogram_distance}
+        \end{figure}
+    \end{frame}
+    
+    \begin{frame}{Results: Distances between distribution histograms - imagenet-r}
+        % Pairwise heatmaps for the last layer 
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_untrained_r/out_matrices/alexnet_intersection_matrix.png}
+                \subcaption{Untrained Last}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_untrained_r_second_last/out_matrices/alexnet_intersection_matrix.png}
+                \subcaption{Untrained Second Last}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_untrained_r_third_last/out_matrices/alexnet_intersection_matrix.png}
+                \subcaption{Untrained Third Last}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_r/out_matrices/alexnet_intersection_matrix.png}
+                \subcaption{Trained Last}
+                % \label{fig:image2}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_r_second_last/out_matrices/alexnet_intersection_matrix.png}
+                \subcaption{Trained Second Last}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/alexnet_r_third_last/out_matrices/alexnet_intersection_matrix.png}
+                \subcaption{Trained Third Last}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            
+            \caption{KL Divergence Heatmaps on imagenet-r for Alexnet}
+            \label{fig:alexnet_r_histogram_distance}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{Results: Dimensions of Manifolds on CIFAR10}
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_random_labels/probability_results/pca_overlap_heatmap.png}
+                \subcaption{Random Labels}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_250_epoch/probability_results/pca_overlap_heatmap.png}
+                \subcaption{Overtrained}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_best/probability_results/pca_overlap_heatmap.png}
+                \subcaption{Best}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \caption{Manifold Dimension Overlap Heatmaps}
+            \label{fig:pca_overlap_heatmaps}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{Dimensionality of Manifolds}
+        \begin{itemize}
+            \setlength\itemsep{1em}
+            \item 
+                Significant overlap on the random label setting
+            \item 
+                Much smaller dimensionality on actual data
+            \item 
+                Overtrained model has higher dimensional manifolds for every single class
+        \end{itemize}    
+    \end{frame}
+    
+    \begin{frame}{Conclusions}
+        \begin{itemize}
+            \setlength\itemsep{1em}
+            \item 
+                Significant activations are sparse
+            \item 
+                Framework registers different behaviour on in and out of distribution datasets
+            \item 
+                Behaviour also different for networks that memorise and overtrain compared to a best-fit network
+        \end{itemize}
+    \end{frame}
+    
+    \begin{frame}{Future Work}
+        \begin{itemize}
+            \setlength\itemsep{1em}
+            \item 
+                Sample complexity of attaining a KL Divergence of $\epsilon$
+            \item 
+                Measuring data regularity/complexity based on the KL divergence
+            \item 
+                Tightening the esimate by making a modification/finding an under-estimator
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}[allowframebreaks]{References}
+        \printbibliography
+    \end{frame}
+        
+\end{document}

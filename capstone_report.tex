@@ -47,14 +47,21 @@
             \textbf{Out of Distribution Detection}: When considering open world deployment of networks, it simply isn't possible to train them on exhaustive partition of every input they can expect. Thus, it becomes important to develop mechanisms that allow users to detect when an input is outside the training distribution of a model. The first major work that tackled this problem with some effectiveness was \cite{hendrycks2018baselinedetectingmisclassifiedoutofdistribution}, which uses $-\max_i \softmax(f(x)_i)$ as a means of detecting if a particular input is outside the training distribution. This is analogous to treating the magnitude of the softmax output as a confidence measure, which isn't entirely accurate as pointed out by the authors. However, this has proven to be a baseline which is difficult to beat non-trivially. \cite{hendrycks2019deepanomalydetectionoutlier} describes a method for fine-tuning trained models to detect OOD inputs using unlabelled data and the KL divergence from a uniform distribution. ODIN \cite{liang2020enhancingreliabilityoutofdistributionimage} has empirically shown excellent performance on OOD detection, but requires tuning hyperparameters beforehand. \cite{lee2018simpleunifiedframeworkdetecting} Uses a similar idea of creating a probability distribution over feature spaces and uses the minimum mahalanobis distance as a classifier, and also use it to show that tuning their classifier on certain adversarial attacks adds robustness to other adversarial attacks. The authors assume a multivariate gaussian distribution on the class-conditional softmax probability vectors, and for a vector output the class for which the probability vector has the smallest mahalanobis distance. \cite{sastry2020detectingoutofdistributionexamplesindistribution} Uses the gram matrices of the feature vectors and computes layer-wise deviations of an input from the normal values of the class.
             % TODO: Concept and Covariate Shift, add and explain literature
 
-            \textbf{Activation Patterns of Neural Networks}: There has been some past work on analysing the patterns of activation of neural networks. On the side of interpretability, SUMMIT \cite{hohman2019summitscalingdeeplearning} and NAP \cite{bauerle2022neuralactivationpatternsnaps} both attempt to identify important neurons in an attempt to interpret the features associated with different classes. \cite{stano2020explainingpredictionsdeepneural} fits a mixture of gaussians to each neuron in selected layers with the explicit goal of attributing predictions to neurons. Similar ideas have been used for the detection of rare classes \cite{paterson2021detectionmitigationraresubclasses} as well as the detection of out-of-distribution inputs \cite{olber2023detectionoutofdistributionsamplesusing}. To our knowledge, this is the first work that imposes a notion of significance on the activations. 
+            \textbf{Activation Patterns of Neural Networks}: There has been some past work on analysing the patterns of activation of neural networks. On the side of interpretability, SUMMIT \cite{hohman2019summitscalingdeeplearning} and NAP \cite{bauerle2022neuralactivationpatternsnaps} both attempt to identify important neurons in an attempt to interpret the features associated with different classes. \cite{stano2020explainingpredictionsdeepneural} fits a mixture of gaussians to each neuron independently in selected layers with the explicit goal of attributing predictions to neurons. They use at most 2 gaussians  Similar ideas have been used for the detection of rare classes \cite{paterson2021detectionmitigationraresubclasses} as well as the detection of out-of-distribution inputs \cite{olber2023detectionoutofdistributionsamplesusing}. To our knowledge, this is the first work that imposes a notion of significance on the activations. 
 
             \textbf{Adversarial Robustness}: Szegdy et. al. discovered \cite{szegedy2014intriguingpropertiesneuralnetworks} in 2014 that classifiers on vision models are susceptible to extremely small changes (in some $L^p$ space) that can cause a misclassfification. Since then, a considerable amount of work has gone into attempting to explain their existence (\cite{shafahi2020adversarialexamplesinevitable}, \cite{shamir2022dimpledmanifoldmodeladversarial}) and the development of attacks (PGD \cite{madry2019deeplearningmodelsresistant}, FGSM\cite{goodfellow2015explainingharnessingadversarialexamples}) and defenses to those attacks, either by changing the loss function or by modifying the training algorithm in some way. 
             
             \textbf{Manifold Hypothesis}: This is an idea that pre-dates deep learning, that most real-world datasets in high dimensions have an underlying low dimensional structure. In the context of machine learning, it has primarily been studied from the perspective of dimensionality reduction, reducing a set of points in a high dimensional space to one in a low dimensiona space which is equivalent to it. \cite{fefferman2013testingmanifoldhypothesis} develops an algorithm to test the hypothesis, and \cite{NIPS2010_8a1e808b} discusses the sample complexity of the problem. See \cite{meil2023manifoldlearningwhathow} for a survey of the most recent methods in the field. 
 
             % \textbf{Lottery Ticket Hypothesis}: The sparsity of activations in neural networks is widely seen in practice. Frankle and Carbin suggested that a small subset of neurons are better primed to fit the dataset at initialisation time, and dubbed this the 'lottery ticket hypothesis'. Subsequent work has focused on algorithms for identifying such lottery tickets. 
-
+        \subsection{Difference from existing work}
+            Our contributions are as follows 
+            \begin{itemize}
+                \item 
+                    The gaussian mixtures used in \cite{stano2020explainingpredictionsdeepneural} are sensitive to initialisation and parameters such as the number of peaks, while assuming independence of each activation value. They then use the hamming distance to support explainabilty of their predictions
+                \item 
+                    
+            \end{itemize}
     \section{Methods}
         % Shifts in distribution are situation when the distributions of the training and testing sets are not identical. In literature, the most common classification of these shifts are concept shift and covariate/data shift.
 
@@ -154,7 +161,7 @@
             \[S(x_{ij}) = 1 \text{ if } |x_{ij}| > \frac{|\sum_j x_{ij}|}{n_{in}} \]
             where $n_{in}$ is the number of input features, i.e. number of columns in the matrix. The justification behind this is the idea that if an activation has an above average contribution to the final activation, the neuron-weight interaction is significant.
             As eariler, we hypothesise that the number of significant interactions between neurons and weights are sparse, and that the sparsity increases with depth. 
-            
+        
         \subsection{KL Divergence Between Classes}
             Building on the same experiment, we wanted to check both the entropies in between different classes over the activation distribution for the same layer. We also measured the same entropies at training and testing time, as well as an in and out of distribution dataset. The in-distribution dataset was the validation set for imagenet as used eariler, and the out of distribution dataset was the imagenet-r dataset created by Hendrycks et. al.\cite{hendrycks2021facesrobustnesscriticalanalysis}. This is a collection of stylised versions of the standard classes of imagenet such as caricatures. This dataset has 200 classes compared to the original 1000 from imagenet, and to ensure the comparison was meaningful we sampled 50 classes from the dataset uniformly at random and computed the pairwise KL divergences between pairs of classes from the imagenet validation set, between pairs of classes from the imagenet-r set and between the same classes from imagenet and imagenet-r. Along similar lines, we also measured the entropy of the distributions. Analagous to regression, the distance within the clusters (entropy) should decrease, while the distance between the clusters (KL divergence) should increase. The entropy is given by the formula
             \[H(X) = -\sum p(x)\log(p(x))\]
@@ -162,6 +169,25 @@
             \[D_{KL}(P||Q) = \sum P(x)\log(\frac{P(x)}{Q(x)})\]
             This can be thought of as a measure of how well $P$ approximates $Q$. It is not a true metric, because it doesn't satisfy triangle inequality or symmetry. Our computations make a strong assumption of \textbf{independence} of the significance of activations, i.e. that any activation will be significant in it's own row is independent of the other events being significant. 
         
+        \subsection{Modelling Activations using a Multivariate Gaussian}
+            The matrix of neuron-weight products for each image can flattened
+            \[\begin{bmatrix}
+                w_{1,1}x_1  & \dots & w_{1,n_{in}}x_1 \\
+                \vdots & \ddots & \vdots \\
+                w_{n_{out}, 1}x_{n_{in}} & \dots & w_{n_{out}, n_{in}}x_{n_{in}} 
+            \end{bmatrix} 
+            \rightarrow 
+            \begin{bmatrix}
+                w_{1,1}x_1 \\
+                \vdots \\
+                w_{n_{out}, n_{in}}x_{n_{in}} \\
+            \end{bmatrix}
+            \]
+            The following estimators can be used for the mean and variance of the distribution. Note that this assumes the distribution is gaussian, because it is being modelled entirely using just the mean and variance. Given images $x_1, \dots, x_n$ for a class $c$, it's mean and covariance can be estimated as
+            \[\vec{\mu_c} = \frac{1}{n}\sum_{i=1}^n \vec{x}_i\]
+            \[\Sigma_c = \frac{1}{n}\sum_{i=1}^n (\vec{x}_i - \vec{\mu_c})(\vec{x}_i - \vec{\mu_c})^T\]
+            To avoid issues with numerical stability, the off-diagonal entries are set to zero, effectively assuming independence of the neuron activation values. Then, the mahalanobis distance is calculated to estimate the distance between classes at the final layer.
+            \[d_{\text{mahalanobis}}(c_1, c_2) = \sqrt{((\vec{\mu_{c_1}} - \vec{\mu_{c_2}})^T\Sigma_{c_1}(\vec{\mu_{c_1}} -\vec{\mu_{c_2}}))}\]
         \subsection{Memorisation and Significance}
             We hypothesise that a network which has memorised it's training data would have significantly different properties in terms of sparsity and the separation of classes. To this end, we replicate the experiment specified in \cite{zhang2017understandingdeeplearningrequires} and train a modified version of AlexNet on CIFAR10 until it reaches zero error. The details of the training stay the same and will be provided in Appendix A. 
         
