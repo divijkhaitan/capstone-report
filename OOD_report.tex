@@ -1,0 +1,293 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{float}
+\usepackage[T1]{fontenc}
+\title{Summary of Post-Hoc OOD Detection Methods}
+\author{Divij Khaitan}
+\date{\today}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{subcaption}
+\usepackage{tabularx}
+\usepackage{tabularray}
+\usepackage{longtable}
+\DeclareMathOperator{\softmax}{softmax}
+\DeclareMathOperator{\argmax}{argmax}
+\providecommand{\ceil}[1]{\left \lceil #1 \right \rceil }
+\providecommand{\floor}[1]{\left \lfloor #1 \right \rfloor }
+\providecommand{\set}[1]{\{#1\}}
+\providecommand{\norm}[1]{||#1||}
+\providecommand{\inner}[1]{\langle#1\rangle}
+
+
+\begin{document}
+    \maketitle
+
+    \section{Introduction}
+        The problem of OOD detection can be formalised as follows. Given a distribution $p_{train}$ from which the data and labels are sampled from i.i.d., there exist many distributions $p_{out}$, inputs from which may be fed into the model. The goal of the problem is using just $p_{train}$ alongside an auxillary distribution $p_{aux}$, to train a model $f$ such that $f(x_i) = y_i$ for all $(x_i, y_i) \sim p_{train}$, and $f(x_j) = \text{out}$ for all $x_j, y_j \sim p_{out}$.
+
+        % \subsection{Limitations and Challenges}
+        %     Several aspects of the problem make it extremely challenging, including but not limited to 
+        %     \begin{itemize}
+        %         \item 
+
+        %     \end{itemize}
+
+    \section{Methods}
+        This will focus on post-hoc methods, as opposed to methods that utilise the auxillary dataset to re-train/fine-tune the network to detect OOD samples.
+
+        \subsection{Maximum Softmax Probability (2016)}
+            $g(x) = \argmax \softmax(f(x)) \text{ if } \max \softmax(f(x)) > \tau \text{ else } OOD$
+            
+            Broad Ideas
+            \begin{itemize}
+                \item 
+                    Softmax probabilities have poor correspondence to confidence of prediction, because they are very sensitive to noise
+                \item 
+                    However, they seem to have lower values for out of distribution samples so they provide a reasonable baseline for OOD detection.
+            \end{itemize}
+
+            Comments:
+            \begin{itemize}
+                \item 
+                    Easy to implement
+                \item 
+                    Vulnerable to adversarial attacks
+                \item 
+                    Depends on network calibration
+            \end{itemize}
+        
+        \subsection{ODIN}
+            Replaces softmax on $f(x)$ with temperature scaled $\frac{f(x)}{T}$. Also backpropogates to find an image which has a higher predicted probability for the maximum probability class. Last step is the same as MSP.
+            
+            Broad Ideas:
+            \begin{itemize}
+                \item 
+                    Temperature scaling can increase the gap in softmax scores between in and out distribution
+                \item 
+                    Gradient descent on the has a larger effect in increasing the softmax score of the majority class on in-distribution examples than out-distribution examples. 
+                \item 
+                    Find that $\norm{\nabla_x \log S(x;T)}$ is larger in small neighbourhoods of ID images
+            \end{itemize}
+            
+            Comments:
+            \begin{itemize}
+                \item 
+                    Effective
+                \item 
+                    Sensitive to value of T
+                \item 
+                    Tuning T may be impossible in certain settings and may not generalise to different auxillary sets
+            \end{itemize}
+
+        \subsection{Mahalanobis (2018)}
+            Outperforms ODIN on some tasks. Fits a gaussian distribution to each class conditional distribution. 
+            $P(y = c| x) = \frac{\exp((Wf(x) + b)_c)}{\sum_{c'}\exp((Wf(x) + b)_{c'})}$ is the softmax, the class conditional distribution of $f(x)$, $P(f(x)|y = c) = N(\mu_c, \Sigma_c)$. The justification is that Gaussian Discriminant Analysis assuming a single covariance matrix would result in the softmax classifier. The final classifier is created by computing the closest class in the Mahalanobis distance, preprocessing similar to ODIN to increase probability of that class. The confidence score is defined as $\max_c - (f(x) - \hat{\mu}_c)^T\Sigma^{-1}(f(x) - \hat{\mu}_c)$, which is the log pdf of the class-conditional distribution.
+            
+            Broad Ideas:
+            \begin{itemize}
+                \item 
+                    Assuming a class conditional multivariate gaussian with tied covariance, Mahalanobis distance can be used as a confidence score
+                \item 
+                    Theoretical justification with a heuristic involving gaussian discriminants (reduces to linear discriminant under if covariance is tied)
+            \end{itemize}
+
+            Comments:
+            \begin{itemize}
+                \item 
+                    No sensitivity to hyperparameters
+                \item 
+                    Restrictive assumptions of shared covariance and gaussian distributed features
+            \end{itemize}
+        
+        \subsection{Energy(2020)}
+            $E(f, x) = -T \log(\sum \exp(\frac{f(x)_i}{T}))$. OOD if too small, else ID. Find that temperature scaling is not necessary, degrades performance. 
+            
+            Broad Points:
+            \begin{itemize}
+                \item 
+                    Show connection between energy and softmax
+                \item 
+                    Gradient descent on negative log likelihood decreases the energy associated with the label class and increases the other. Since the energy is dominated by the label class, this is an overall drop
+                \item 
+                    Softmax creates a biased confidence score which is why it isn't suitable for OOD
+            \end{itemize}
+        \subsection{ReAct(2021)}
+            Proposes that clipping activations that are too large should help with OOD detection. Improper normalisation is what causes large spikes, which are a characteristic of OOD inputs and lead to overconfident predictions. Clipping predictions improves separation between ID and OOD distributions using different score functions. 
+            
+            Broad Points:
+            \begin{itemize}
+                \item 
+                    Activations at the final layer pre-classification seem to have a heavier tail for the OOD data compared to the ID data.
+                \item 
+                    Might be intensified by BN, clipping helps control for this
+                \item 
+                    Do some math to show that the reduction in the embedding and output spaces are both larger for OOD than ID, so clipping increases separation between both types of inputs
+
+            \end{itemize}
+        \subsection{DiCE(2021)}
+            Starts by estimating the average contribution of a neuron to a single class using shapely and uses only the top k weights. Masks away all the unimportant neurons using a top-k approach and uses energy score. 
+            
+            Broad Points:
+            \begin{itemize}
+                \item 
+                    Neuron-weight products have heavy tails in both directions, only few important activations
+                \item 
+                    Sparsifying post-hoc increases the separation over the distribution of energy scores between ID and OOD
+            \end{itemize}
+        \subsection{GEM(2022)}
+            Models ID activations as a mixture of $k$ gaussians with different means and the same covariance. Uses the log-sum-exp of the mahalanobis distances from each class-conditional gaussian as score.
+            
+            Broad Points:
+            \begin{itemize}
+                \item 
+                    Mahalanobis distance energy is proportional to the log-likelihood of the density, making it better than raw energy and MSP
+                \item 
+                    Dimensionality increases OOD uncertainty
+            \end{itemize}
+        \subsection{NAP(2022)}
+            Binarises activations from all layers, convolutional and linear and uses minimum hamming distance across classes for OOD detection.
+            
+            Broad Points:
+            \begin{itemize}
+                \item 
+                    Pools convolutional layers into one feature per channel and linear layer neurons into 1 if nonzero else 0 
+                \item 
+                    Creates an atlas for each class and looks at minimum hamming distance from each class
+                \item 
+                    Refers to a paper which show only few patterns of activation are used by a network on average 
+            \end{itemize}
+        \subsection{LiNE}
+            Clip the activations like in react. Then, using Shapely, prune to keep only the top k activations and the top k weights in the final layer, then use 
+            
+            Broad Points:
+            \begin{itemize}
+                \item 
+                    Only new idea is pruning using shapely instead of magnitude
+            \end{itemize}
+        \subsection{ConjNorm(2024)}
+            Estimates $\hat{p}_\theta$ of $p_I$ can be split up as $\sum_{k=1}^K \hat{p}_{\theta}(k|x)\hat{p}_{\theta}(k)$. Conclusion from the above is that any measure/score function should be $\propto \sum_{k=1}^K \hat{p}_{\theta}(k|x)$, which I'm not sure about because the above itself isn't directly proportional to it. Using the feature extractor of the network to get embedding $z$, the density can be framed as 
+            \[\hat{p}_\theta(z|k) = \frac{g_\theta(z, k)}{\Phi(k)}\]
+            $g$ is a density function and $\Phi$ is the area under the curve of $g$, to normalise the probabilities. The paper shows why MSP and Mahalanobis are not proportional to the desired quantity, while GEM, by assuming the distribution is Gaussian is too restrictive in it's assumptions. Then the exponential family of distributions is defined alongside a notion of bregman divergence using the dual of the legendre that defines the exponential.
+            \[d_{\phi}(z, z') = \phi(z) - \phi(z') - \inner{z - z', \nabla(\phi(z'))}\]
+            The bregman divergence is defined using the square of a $p$-norm, and the final problem left is to solve the partition function estimation. Baselines tried are $\Phi(x) = 1$, estimating $\Phi(x)$ using KDE and using importance sampling, which appears to work best. \\
+            
+            Broad Points:
+            \begin{itemize}
+                \item 
+                    Most existing metrics are not directly proportional to the class-conditional distribution or have restrictive assumptions
+                \item 
+                    Estimating the partition function using monte carlo and density using the bregman divergence from the mean
+            \end{itemize}
+        \subsection{Greg+ (2024)}
+            Score function ignores gradient and local information, the local area should have ID data if the OOD and ID are indeed different. The idea is to penalise areas which miscategorise ID/OOD as OOD/ID by having energy scores that are too low/high. 
+            Often there is a sampling bias in OOD training, because the OOD set is usually larger than the ID set. To rectify this, they cluster the normalised features into $n_{ID}$ clusters, with $n_{ID}$ being the number of in-distribution samples in the minibatch. Then, the lowest energy and highest energy missclassifications are chosen as samples to train the network on. Justification for the whole method is approximate lipschitz continuity. 
+            
+            Broad Points:
+            \begin{itemize}
+                \item 
+                    Uses local continuity in the classification i.e. area around a sample should share classification
+                \item 
+                    Energy score can be used to solve the problem of data imbalance by choosing most valuable samples
+            \end{itemize}
+    \section{Summary of Methods}
+    \begin{longtblr}[
+        caption = {Ideas and Comments from Different Papers on the OOD detection problem},
+        label = {tbl:1},
+    ]{
+        colspec = {Q[0.8in,l,m] Q[2in,c,m] Q[2in,c,m]}, % Fixed widths with multi-line and alignment
+        rowhead = 1,
+        colhead = 1,
+        row{1} = {font=\bfseries},
+        col{1} = {font=\bfseries},
+        hlines, % Add horizontal lines
+        vlines, % Add vertical lines
+    }
+    Method & Ideas & Comments \\
+    \hline
+    Maximum Softmax Probability 
+    & Softmax score as a measure of confidence therefore OOD detection baseline 
+    & States that softmax probability is poorly calibrated, not actual confidence metric \\
+    \hline
+    ODIN 
+    & \begin{itemize}
+        \item Temperature scaling with Gradient ascent increases separation between ID and OOD
+        \item Gradient of log softmax probability has large norm in the neighbourhood of an ID function
+    \end{itemize} 
+    & Tuning temperature might not be feasible \\
+    \hline
+    Mahalanobis 
+    & 
+    \begin{itemize}
+        \item Fits class conditional gaussian with single covariance, justifies assumption using LDA 
+        \item Identical preprocessing to ODN
+    \end{itemize}
+    & Assumption quite restrictive, our idea of a distribution may be better with a similar idea \\
+    \hline
+    Energy 
+    & 
+    \begin{itemize}
+        \item Uses energy score with preprocessing to detect OOD, no temperature scaling
+        \item Argues why softmax alone is biased and shouldn't be used
+    \end{itemize}
+    & Improvement not obvious. Energy scores of our distributions worth checking \\
+    \hline
+    ReAct 
+    & Activations have strong positive skew on OOD data, so clipping them should increase separation 
+    & 
+    \begin{itemize}
+        \item Argue that batch norm with improper stats cause abnormal activations, almost the opposite of what we are doing because we are inspecting the tails
+        \item Distribution could be used to check if the activations are significantly different across correct and wrong stats
+    \end{itemize} \\
+    \hline
+    DiCE 
+    & Keep neurons with largest magnitude on average, assuming the others are noise 
+    & 
+    \begin{itemize}
+        \item Argue that batch norm with improper stats cause abnormal activations, almost the opposite of what we are doing because we are keeping the tails, zeroing out the rest
+        \item Distribution could be used to check if the activations are significantly different across correct and wrong stats
+    \end{itemize} \\
+    \hline
+    GEM 
+    & Sets energy function to mahalanobis distance and uses log energy as score, arguing that it's proportional to log density assuming data density is a mixture of k gaussians with a single covariance matrix 
+    & Checking the same metric under our notion of distribution \\
+    \hline
+    NAP
+    & Binarises neurons and convolutional layers, creates class atlas and uses minimum hamming distance as score
+    & 
+    \begin{itemize}
+        \item Arguably most similar to ours
+        \item Doesn't account for noise at all
+        \item Reduces each convolutional layer to single filter and purely geometric idea of distance
+    \end{itemize}\\
+    \hline
+    LiNE
+    & DiCE, replacing largest magnitude with Shapely
+    & 
+    \begin{itemize}
+        \item Shapely has been used in CNNs with decent empirical results but skeptical of linear metric
+        \item Like ReAct, opposite direction to our work (correcting outliers instead of analysing them)
+    \end{itemize}\\
+    \hline
+    ConjNorm
+    & 
+    \begin{itemize}
+        \item Decomposes true density as sum of class conditionals into class probability
+        \item Argues that existing metrics aren't exactly aligned with it or have strong assumptions
+        \item Creates metric using bregman divergence of p-norm as density and importance sampling to estimate partition
+    \end{itemize}
+    & No ideas for improvement, maybe validation of the density/partition estimator \\
+    \hline
+    Greg+
+    & 
+    \begin{itemize}
+        \item Fix OOD-ID data imbalance using importance sampling by energy 
+        \item Networks should locally have some continuity, so regularising by the gradient norm around samples increases data separation
+    \end{itemize}
+    & Training based method, but interesting to use local information \\
+    \hline
+    \end{longtblr}
+    
+    \end{document}
+
+\end{document}
