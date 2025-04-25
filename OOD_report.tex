@@ -2,7 +2,7 @@
 \usepackage{graphicx} % Required for inserting images
 \usepackage{float}
 \usepackage[T1]{fontenc}
-\title{Summary of Post-Hoc OOD Detection Methods}
+\title{Summary of Post-Hoc OOD Detection Methods and Explainability Methods}
 \author{Divij Khaitan}
 \date{\today}
 \usepackage{amsmath}
@@ -33,7 +33,7 @@
 
         %     \end{itemize}
 
-    \section{Methods}
+    \section{Methods: OOD Detection}
         This will focus on post-hoc methods, as opposed to methods that utilise the auxillary dataset to re-train/fine-tune the network to detect OOD samples.
 
         \subsection{Maximum Softmax Probability (2016)}
@@ -190,6 +190,102 @@
                 \item 
                     Energy score can be used to solve the problem of data imbalance by choosing most valuable samples
             \end{itemize}
+
+        \subsection{Conformance Constraints}
+            This paper attempts to find constraints to test the reliability of a model on a given tuple. The biggest takeaway from the method is that when taking a PCA of the images, rather than analysing the top $k$ principal components, it's the bottom $k$ principal components which are important because they can be used to define a set of 'invariants' for different datasets. 
+
+            Broad Points:
+            \begin{itemize}
+                \item 
+                    We can do an A/B testing on a trained model by getting the subspaces formed by the bottom $k$ principal components of the ID and OOD dataset and compute a distance between the subspaces.
+                \item 
+                    Consistent with our work, where a more compact representation is better
+            \end{itemize}
+        
+    \section{Explainability/Interpretability Methods}
+        \subsection{LIME}
+            Local Explanations for models with only black box access. Approximates a neighbourhood around some datapoint using perturbations and trains a smaller, more interpretable model using these datapoints. The idea is that the importance of different features in the local neighbourhood will be approximated by the smaller model and that can be used to explain predictions. 
+        \subsection{SHAP}
+            Tries to estimate a shapely value for each feature, decomposing a prediction into how important each feature is to the prediction amongst all the subsets of features. Needs fairly strong assumptions like feature independence. 
+        \subsection{Layer Relevance Propagation}
+            Recursively 'backpropogates' relevance to the input layer using the update 
+            \[R_j^{l} = \sum_k \frac{a_jw_{jk}}{\sum_{k'} a_jw_{jk'} + \epsilon}R_k^{l + 1}\]
+            Here $R_i^l$ is the relevance of neuron $i$ in layer $l$,  $a_j$ is the value of the $j^{th}$ neuron, $w_{jk}$ is an entry of the weight matrix and $\epsilon$ is a smoothing constant
+            Broad points:
+            \begin{itemize}
+                \item 
+                    Doesn't work for certain types of layers (local response normalisation, attention etc.)
+                \item 
+                    Affected by spurious correlations and backdoors
+            \end{itemize}
+        \subsection{Saliency Maps}
+            Linear approximation of score/probability of any class using first order taylor expansion and use weight matrix as proxy for pixel-level importance. 
+            \begin{itemize}
+                \item 
+                    Linearisation would cause massive information loss since the networks are engineered to be very nonlinear
+                \item 
+                    Pixel level does not seem like a large enough window
+            \end{itemize}
+        
+        \subsection{GRAD CAM}
+            At the level of the final convolutional layer, uses the average of the gradients with respect to each feature map as the importance of that feature map to that class and then computes RELU. The visualised combination is a proxy for how important different neurons are to each class for a certain image
+
+        \subsection{Prototype Relevance Propagation}
+            Builds upon LRP by taking 'prototypes', which are the most 'representative' examples for every class. This is done by relevance propagating to some hidden layer, and computing the similarity of the layer relevance to every element of the dataset. The most similar datapoints in each class become prototypes.
+            Broad Points:
+            \begin{itemize}
+                \item 
+                    Not affected by spurious correlations or backdoors
+                \item 
+                    Directly quantifies similarity of images in embedding space
+            \end{itemize}
+        
+        \subsection{KMEx}
+            Ignores last layer, finds a prototypes using the nearest neighbours of the centroids of k-means clusters (performed separately for each class), and uses various methods to assess the quality of the prototypes. 
+            \begin{itemize}
+                \item 
+                    Finds 'ghosting', where some prototypes are unused almost never happens
+                \item 
+                    Prototypes are semantically meaningful, because accuracy is high. 
+                \item 
+                    The diversity inside prototypes is large, so the important components of the variance of the embedding space are captured
+            \end{itemize}
+    
+        \subsection{Superposition of Neurons and Antrophic's Work on LLMs}
+            The big idea behind superposition is that neural networks are feature extractors with little supervision. Thus, they discover features as necessary but only have a limited number of neurons to represent them. Smaller networks in particular have only a little space, thus in addition to multiple neurons representing the same feature these are squashed into the same neuron. A consequence of this is polysemantic neurons, representing different sparse concepts. 
+            Broad points:
+            \begin{itemize}
+                \item 
+                    Sparse features (mostly absent in the dataset) are more likely to be represented polysemantically
+                \item 
+                    Find a geometric property of feature superposition, similar to Thompson problem in chemistry
+                \item 
+                    Starts by having everything be orthogonal. Then some features are represented by opposite vectors and other geometric structures in increasing order of importance
+                \item 
+                    Polysemantic neurons may emerge even with efforts to supress superposition (artificially forcing activation sparsity)
+                \item 
+                    Individual neurons are not always important, multiple neurons make up a feature.
+                \item 
+                    Dictionary Learning is able to make sense of features in several senses (top-k next predictions upon increasing/supressing the values, change when removing related strings from input tokens etc.)
+                \item 
+                    Superposition and robustness: If there is no need for superposition and features are disentangled, the representations in the latent spaces for concepts become cleanly low-dimensional without interference from unrelated features. Implications for OOD and proper argument for manifold hypothesis
+                \item 
+                    Slightly specific to transformers text generation. Haven't understood all the ideas in their entirety, but unlikely that we have to compute to act upon them in any case.
+            \end{itemize}
+
+        \subsection{Work on Explainability in Vision}
+            Broad Points:
+            \begin{itemize}
+                \item 
+                    Not individual neurons, classes of neurons that represent 'concepts'
+                \item 
+                    Optimizing to increase activation of neuron works, but not for combinations of neurons (features)
+                \item 
+                    Preconditioning by doing gradient descent in the fourier basis seems to help
+                \item 
+                    Concepts may be better encoded using circuits rather than individual neurons
+            \end{itemize}
+        
     \section{Summary of Methods}
     \begin{longtblr}[
         caption = {Ideas and Comments from Different Papers on the OOD detection problem},
@@ -207,28 +303,47 @@
     \hline
     Maximum Softmax Probability 
     & Softmax score as a measure of confidence therefore OOD detection baseline 
-    & States that softmax probability is poorly calibrated, not actual confidence metric \\
+    & 
+    \begin{itemize}
+        \item 
+            States that softmax probability is poorly calibrated, not actual confidence metric \\
+        \item 
+            OOD detection, not clear how robustness would work
+    \end{itemize} \\
     \hline
     ODIN 
-    & \begin{itemize}
-        \item Temperature scaling with Gradient ascent increases separation between ID and OOD
-        \item Gradient of log softmax probability has large norm in the neighbourhood of an ID function
+    & 
+    \begin{itemize}
+        \item 
+            Temperature scaling with Gradient ascent increases separation between ID and OOD \\
+        \item 
+            Gradient of log softmax probability has large norm in the neighbourhood of an ID function
     \end{itemize} 
     & Tuning temperature might not be feasible \\
     \hline
     Mahalanobis 
     & 
     \begin{itemize}
-        \item Fits class conditional gaussian with single covariance, justifies assumption using LDA 
-        \item Identical preprocessing to ODN
+        \item 
+            Fits class conditional gaussian with single covariance, justifies assumption using LDA 
+        \item 
+            Identical preprocessing to ODIN
     \end{itemize}
-    & Assumption quite restrictive, our idea of a distribution may be better with a similar idea \\
+    & 
+    \begin{itemize}
+        \item 
+            Assumption quite restrictive, our idea of a distribution may be better \\
+        \item 
+            Check adversarial examples, distribution seperation can be checked for general robustness
+    \end{itemize} \\
     \hline
     Energy 
     & 
     \begin{itemize}
-        \item Uses energy score with preprocessing to detect OOD, no temperature scaling
-        \item Argues why softmax alone is biased and shouldn't be used
+        \item 
+            Uses energy score with preprocessing to detect OOD, no temperature scaling
+        \item 
+            Argues why softmax alone is biased and shouldn't be used
     \end{itemize}
     & Improvement not obvious. Energy scores of our distributions worth checking \\
     \hline
@@ -242,11 +357,7 @@
     \hline
     DiCE 
     & Keep neurons with largest magnitude on average, assuming the others are noise 
-    & 
-    \begin{itemize}
-        \item Argue that batch norm with improper stats cause abnormal activations, almost the opposite of what we are doing because we are keeping the tails, zeroing out the rest
-        \item Distribution could be used to check if the activations are significantly different across correct and wrong stats
-    \end{itemize} \\
+    & Work out a differentiator\\
     \hline
     GEM 
     & Sets energy function to mahalanobis distance and uses log energy as score, arguing that it's proportional to log density assuming data density is a mixture of k gaussians with a single covariance matrix 
@@ -278,16 +389,70 @@
     \end{itemize}
     & No ideas for improvement, maybe validation of the density/partition estimator \\
     \hline
-    Greg+
-    & 
+    Conformance Constraints 
+    & Least Variant dimensions of a PCA can be used to create invariants for a model and assess trust 
+    & Robustness on Limited data, slightly orthogonal approach overall \\
+    LIME & Approximates a perturbed neighbourhood around datapoint & Not sure how it relates \\
+    SHAP & Feature importance using shapely values & Not sure how it relates \\
+    LRP & Interpretability by looking at the most important neurons in the last layer & Not sure how it relates \\
+    Saliency Maps & Generalisation of LRP & Not sure how it relates \\
+    GRAD-CAM & Generalisation of LRP & Not sure how it relates \\
+    PRP & Generalisation of LRP using prototypes, more robust to backdoors and spurious correlation & Not sure how it relates \\
+    KMEx & Clustering of embeddings & Our framework suggests the same thing \\
+    Anthropic Vision &
     \begin{itemize}
-        \item Fix OOD-ID data imbalance using importance sampling by energy 
-        \item Networks should locally have some continuity, so regularising by the gradient norm around samples increases data separation
+        \item 
+            Circuits (neurons + weights) are an important unit to study
+        \item 
+            Neurons may be polysemantic
+        \item 
+            Monosemantic neurons may lead to polysemantic neurons in the next layer by a phenomenon called superposition
+    \end{itemize} 
+    & Our work relies on circuits in some sense and talks about their separation at an aggregate level \\
+    Anthropic Superposition &  \begin{itemize}
+        \item 
+            Superposition may be caused by models wanting to represent more directions that dimensions available by exploiting sparsity of features in the data
+        \item 
+            If features are not sparse, model performs PCA-like collapsing. When they are, it superposes them
+        \item 
+            Correlated features $\rightarrow$ orthogonal basis \\
+            anticorrelated features $\rightarrow$ opposite ends of same subspace \\
+            If lack of dimensions $\rightarrow$ correlated features have similar directions
+        \item 
+            More superposed models mean more feature interference, lesser adversarial robustness
+        \item 
+            Privelleged Basis (rotation variant representations) incentivise the features to align with neurons
+        \item 
+    \end{itemize} & \\
+    Anthropic LLM & 
+    \begin{itemize}
+        \item 
+            \begin{itemize}
+                \item 
+                    Using a sparse autoencoder to extract true high dimensional features
+                \item 
+                    Find some universality in features 
+                \item 
+                    Find cleanly interpretable features
+                \item 
+                    'Features' are more useful for Interpretability than neurons
+                \item 
+                    Features come in clusters
+                \item 
+
+            \end{itemize}
     \end{itemize}
-    & Training based method, but interesting to use local information \\
-    \hline
+    & \\
     \end{longtblr}
     
     \end{document}
-
+    \section{TODO}
+    \begin{itemize}
+        \item 
+            OOD Robustness: Under own priors, check separation of log probabilities
+        \item 
+            Adversarial Robustness: DIstances in different distributions
+        \item 
+            Explainability/Interpretability: 
+    \end{itemize}
 \end{document}

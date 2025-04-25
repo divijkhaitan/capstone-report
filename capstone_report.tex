@@ -44,25 +44,27 @@
             
             \indent \textbf{Generalisation/Implicit Regularisation}: Zhang et. al. showed as early as 2017 that even AlexNet has enough capacity to fit all of imagenet with completely random labels perfectly when given enough time \cite{zhang2017understandingdeeplearningrequires}. This suggests that although networks have extremely high 'capacity', they do not use all of it in practice and that contrary to statistical wisdom, they are not overfitting as a result of overparameterisation. Arora et. al. showed that overparameterisation provides a speed up to the optimisation of neural networks and provided bounds for the generalisation error of two layer ReLU networks \cite{pmlr-v80-arora18a}. Soltanolkotabi and Oymak showed that networks that polynomially overparameterised in the size of the input are resistant to label corrpution, with the final parameters being close to their initialised values \cite{pmlr-v108-li20j}. A major hypothesis in this area is that stochastic gradient descent (SGD) as a training method introduces an 'implicit regularisation' into the training of a deep network. Norm minimisation was one explanation for this behaviour, first put forth by \cite{neyshabur2015searchrealinductivebias}. Several notions of complexity have been put forth, including VC dimension and Rademacher complexity, see \cite{neyshabur2017implicitregularizationdeeplearning} for a more granular view of these. Examples where all matrix norms diverge were constructed in \cite{razin2020implicitregularizationdeeplearning}, indicating that the relationship between weight decay and implicit regularisation requires more inspection. This relationship has also been questioned by \cite{arora2019implicitregularizationdeepmatrix}, which shows that for the case of matrix factorisation, matrix norms are insufficient to describe the action of gradient-based optimisation. This paper also shows that adding depth to matrix factorisation encourages low rank solutions, which improve the accuracy of the reconstruction. \cite{gissin2019implicitbiasdepthincremental} formally showed that deep networks learn 'incrementally', and while shallow networks can exhibit similar behaviour they do so for a small set of initial conditions. \cite{arpit2017closerlookmemorizationdeep} showed that SGD behaves differently on noise as opposed to actual datasets, and that dropout works better than noise injection for hindering memorisation while promoting generalisation
 
-            \textbf{Out of Distribution Detection}: When considering open world deployment of networks, it simply isn't possible to train them on exhaustive partition of every input they can expect. Thus, it becomes important to develop mechanisms that allow users to detect when an input is outside the training distribution of a model. The first major work that tackled this problem with some effectiveness was \cite{hendrycks2018baselinedetectingmisclassifiedoutofdistribution}, which uses $-\max_i \softmax(f(x)_i)$ as a means of detecting if a particular input is outside the training distribution. This is analogous to treating the magnitude of the softmax output as a confidence measure, which isn't entirely accurate as pointed out by the authors. However, this has proven to be a baseline which is difficult to beat non-trivially. \cite{hendrycks2019deepanomalydetectionoutlier} describes a method for fine-tuning trained models to detect OOD inputs using unlabelled data and the KL divergence from a uniform distribution. ODIN \cite{liang2020enhancingreliabilityoutofdistributionimage} has empirically shown excellent performance on OOD detection, but requires tuning hyperparameters beforehand. \cite{lee2018simpleunifiedframeworkdetecting} Uses a similar idea of creating a probability distribution over feature spaces and uses the minimum mahalanobis distance as a classifier, and also use it to show that tuning their classifier on certain adversarial attacks adds robustness to other adversarial attacks. The authors assume a multivariate gaussian distribution on the class-conditional softmax probability vectors, and for a vector output the class for which the probability vector has the smallest mahalanobis distance. \cite{sastry2020detectingoutofdistributionexamplesindistribution} Uses the gram matrices of the feature vectors and computes layer-wise deviations of an input from the normal values of the class.
+            \textbf{Out of Distribution Detection}: When considering open world deployment of networks, it simply isn't possible to train them on exhaustive partition of every input they can expect. Thus, it becomes important to develop mechanisms that allow users to detect when an input is outside the training distribution of a model. The first major work that tackled this problem with some effectiveness was \cite{hendrycks2018baselinedetectingmisclassifiedoutofdistribution}, which uses $-\max_i \softmax(f(x)_i)$ as a means of detecting if a particular input is outside the training distribution. This is analogous to treating the magnitude of the softmax output as a confidence measure, which isn't entirely accurate as pointed out by the authors. However, this has proven to be a baseline which is difficult to beat non-trivially. \cite{hendrycks2019deepanomalydetectionoutlier} describes a method for fine-tuning trained models to detect OOD inputs using unlabelled data and the KL divergence from a uniform distribution. ODIN \cite{liang2020enhancingreliabilityoutofdistributionimage} has empirically shown excellent performance on OOD detection, but requires tuning hyperparameters beforehand. \cite{lee2018simpleunifiedframeworkdetecting} Uses a similar idea of creating a probability distribution over feature spaces and uses the minimum mahalanobis distance as a classifier, and also use it to show that tuning their classifier on certain adversarial attacks adds robustness to other adversarial attacks. The authors assume a multivariate gaussian distribution on the class-conditional softmax probability vectors, and for a vector output the class for which the probability vector has the smallest mahalanobis distance. All of these fall into the class of post-hoc OOD detection methods, which includes \cite{liu2021energybasedoutofdistributiondetection, sun2022diceleveragingsparsificationoutofdistribution, morteza2021provableguaranteesunderstandingoutofdistribution}. Another line of thought introduced in \cite{sun2021reactoutofdistributiondetectionrectified} suggests that large activation values are caused by improper normalisation and that activation clipping separates the in and out of distribution data is also explored by \cite{ahn2023lineoutofdistributiondetectionleveraging} when combining it with a significance measure based on shapely values.
             % TODO: Concept and Covariate Shift, add and explain literature
-
-            \textbf{Activation Patterns of Neural Networks}: There has been some past work on analysing the patterns of activation of neural networks. On the side of interpretability, SUMMIT \cite{hohman2019summitscalingdeeplearning} and NAP \cite{bauerle2022neuralactivationpatternsnaps} both attempt to identify important neurons in an attempt to interpret the features associated with different classes. \cite{stano2020explainingpredictionsdeepneural} fits a mixture of gaussians to each neuron independently in selected layers with the explicit goal of attributing predictions to neurons. They use at most 2 gaussians  Similar ideas have been used for the detection of rare classes \cite{paterson2021detectionmitigationraresubclasses} as well as the detection of out-of-distribution inputs \cite{olber2023detectionoutofdistributionsamplesusing}. To our knowledge, this is the first work that imposes a notion of significance on the activations. 
+            
+            \textbf{Interpretability}: There has been some past work on analysing the patterns of activation of neural networks. On the side of interpretability, SUMMIT \cite{hohman2019summitscalingdeeplearning} and NAP \cite{bauerle2022neuralactivationpatternsnaps} both attempt to identify important neurons in an attempt to interpret the features associated with different classes. \cite{stano2020explainingpredictionsdeepneural} fits a mixture of gaussians to each neuron independently in selected layers with the explicit goal of attributing predictions to neurons. They use at most 2 gaussians. Similar ideas have been used for the detection of rare classes \cite{paterson2021detectionmitigationraresubclasses} as well as the detection of out-of-distribution inputs \cite{olber2023detectionoutofdistributionsamplesusing}. \cite{simonyan2014deepinsideconvolutionalnetworks, faaaf4beb6f24ca599a7ecae54e0c724, Selvaraju_2019, gautam2021lookslikethatenhancing} focus on mapping each input pixel to an importance value, while \cite{ribeiro2016whyitrustyou, lundberg2017unifiedapproachinterpretingmodel} focus on importance of each feature locally around a particular datapoint. \cite{gautam2024prototypicalselfexplainablemodelsretraining} uses clustering in the embedding space alongside PRP \cite{gautam2021lookslikethatenhancing} characterise the prediction of any model in terms of it's similarity to a set of prototypes - images which are representative of the rest of the class - which is obtained by clustering embeddings in the latent space.
+            
+            \textbf{Mechanistic Interpretability and Superposition of Neurons}: Mechanistic Interpretability particularly aims to 'reverse engineer' a neural network by connecting parts of a network to semantic concepts that can be understood by humans. \cite{olah2017feature} uses optimization to backpropogate the activations for particular neurons to see which portions of images they are most sensitive to. They find that high frequency patterns are a common occurence when following the path of steepest descent, and this leads to pathological examples that the network will never actually see. The conclusion of the work is that this can be fixed by penalising high frequency patterns. A follow-up paper in 2018 focuses on the interaction between different parts of the network, as well as creating interfaces to make sense of these interaction at a human scale \cite{olah2018the}. \cite{olah2020zoom} claims that alongside the neurons, it is also the connections between them that hold semantic meaning and can be studied. Empirical evidence from InceptionV1 shows that curve detecting convolutional filters in early layers directly inhibit and activate parts of filters that detect more complicated shapes in later layers. Additionally, they find that a single monosemantic neuron detecting cars in one layer spreads the feature over multiple neurons in the next layer that seem to be detecting dog faces. This phenomenon is called superposition, and is studied empirically over the course of several papers \cite{elhage2022solu, elhage2022superposition, bricken2023monosemanticity, templeton2024scaling, lindsey2025biology} particularly for LLMs. The idea behind superposition is that concepts are encoded as directions in a latent space, and when the concepts are sparse and more numerous than the dimensionality of the latent space, the network encodes them as into non-orthogonal directions. A consequence of this is that neurons are polysemantic and activate for multiple concepts as well as the fact that the neurons themselves need not be the unit of interpretation.  
 
             \textbf{Adversarial Robustness}: Szegdy et. al. discovered \cite{szegedy2014intriguingpropertiesneuralnetworks} in 2014 that classifiers on vision models are susceptible to extremely small changes (in some $L^p$ space) that can cause a misclassfification. Since then, a considerable amount of work has gone into attempting to explain their existence (\cite{shafahi2020adversarialexamplesinevitable}, \cite{shamir2022dimpledmanifoldmodeladversarial}) and the development of attacks (PGD \cite{madry2019deeplearningmodelsresistant}, FGSM\cite{goodfellow2015explainingharnessingadversarialexamples}) and defenses to those attacks, either by changing the loss function or by modifying the training algorithm in some way. 
             
             \textbf{Manifold Hypothesis}: This is an idea that pre-dates deep learning, that most real-world datasets in high dimensions have an underlying low dimensional structure. In the context of machine learning, it has primarily been studied from the perspective of dimensionality reduction, reducing a set of points in a high dimensional space to one in a low dimensiona space which is equivalent to it. \cite{fefferman2013testingmanifoldhypothesis} develops an algorithm to test the hypothesis, and \cite{NIPS2010_8a1e808b} discusses the sample complexity of the problem. See \cite{meil2023manifoldlearningwhathow} for a survey of the most recent methods in the field. 
 
             % \textbf{Lottery Ticket Hypothesis}: The sparsity of activations in neural networks is widely seen in practice. Frankle and Carbin suggested that a small subset of neurons are better primed to fit the dataset at initialisation time, and dubbed this the 'lottery ticket hypothesis'. Subsequent work has focused on algorithms for identifying such lottery tickets. 
-        \subsection{Difference from existing work}
+        \subsection{Summary of Contributions}
             Our contributions are as follows 
             \begin{itemize}
                 \item 
-                    The gaussian mixtures used in \cite{stano2020explainingpredictionsdeepneural} are sensitive to initialisation and parameters such as the number of peaks, while assuming independence of each activation value. They then use the hamming distance to support explainabilty of their predictions
+                    Providing a framework to assess the robustness of a trained neural network in a more principled manner than checking accuracy or perturbations that may never naturally occur.
                 \item 
-                    The framework provides a probabilistic view of the OOD detection problem. As we will show with some evidence later, a geometric interpretation like the manifold hypothesis does not capture the separation between classes which our ideas are able to detect. While the ideas of fitting a multivariate gaussian or a bernoulli distribution to the activations of a network is not new, no existing work examines the neuron-weight products or uses these ideas to evaluate the robustness of a neural network
+                    Extracting distributions from trained networks to address the problem of out-of-distribution data in a principled manner 
                 \item 
-
+                    Developing a method for checking distances between datasets at deployment-time
             \end{itemize}
     \section{Methods}
         % Shifts in distribution are situation when the distributions of the training and testing sets are not identical. In literature, the most common classification of these shifts are concept shift and covariate/data shift.
@@ -119,7 +121,7 @@
     % \section{Entropies in Between Classes}
         
         \subsection{Class-Wise Frequencies of Significant Neuron-Weight Interactions}
-            As an additional approach, we decided to study the interactions in a neural network at a more granular level. Instead of just looking at the final value of the neuron, we decided to look at each individual weight being multiplied into each neuron. In this case, what we did is described below. 
+            The focus of the study was the interactions of neurons and weights together. Thus, instead of just looking at the final value of the neuron, we decided to look each circuit that extends across a single layer and corresponds to a single pair of neuron and weight. In this case, what we did is described below. 
 
             The final layer of the neural network operates as follows. Given an activation vector $x \in \mathbb{R}^{n_{in} \times 1}$ and a weight matrix $W \in \mathbb{R}^{n_{out} \times n_{in}}$ 
                 \[
@@ -172,6 +174,16 @@
             This can be thought of as a measure of how well $P$ approximates $Q$. It is not a true metric, because it doesn't satisfy triangle inequality or symmetry. Our computations make a strong assumption of \textbf{independence} of the significance of activations, i.e. that any activation will be significant in it's own row is independent of the other events being significant. 
             An idea the framework pushes is probabilistic interpretation of class separation. To compare, we flatten the proportion matrices to vectors in $\mathbb{R}^{n_{in}\times n_{out}}$ and compute the euclidean distance between them, which is a geometric quantity. 
         
+        \subsection{Log Probabilities for OOD detection}
+            Given that we have a distribution over different datasets, a natural question to ask is if they register different behaviour for in-distribution and out-of-distribution data. For this, only the CIFAR10 dataset was used, with CIFAR10.1 \cite{recht2018cifar10classifiersgeneralizecifar10} providing a frame-of-reference dataset which was meant to be similar and TinyImagenet \cite{Le2015TinyIV} and SVHN \cite{37648} used as OOD datasets. Since separation between individual classes cannot be tracked because of label incoherence, the comparison is made across the distribution aggregated over the entire dataset. Alongside this, we measure 
+            \begin{itemize}
+                \item 
+                    The separation of datasets at an aggregate level
+                \item 
+                    The posterior probability of having observed an activation of an image $x$ given that it comes from a dataset $Y$, i.e. $p(f(x)| x \sim Y)$ across the different dataset choices $Y$. Y here is a multivariate bernoulli distribution. Separation of different datasets under this score would make this a good metric for out-of-distribution detection. 
+            \end{itemize}
+            Tiny Imagenet needs to have a mapping to CIFAR10 crafted by hand. The mapping decided by us can be found in Appendix A. 
+        
         \subsection{Modelling Activations using a Multivariate Gaussian}
             The matrix of neuron-weight products for each image can flattened
             \[\begin{bmatrix}
@@ -189,501 +201,762 @@
             The following estimators can be used for the mean and variance of the distribution. Note that this assumes the distribution is gaussian, because it is being modelled entirely using just the mean and variance. Given images $x_1, \dots, x_n$ for a class $c$, it's mean and covariance can be estimated as
             \[\vec{\mu_c} = \frac{1}{n}\sum_{i=1}^n \vec{x}_i\]
             \[\Sigma_c = \frac{1}{n}\sum_{i=1}^n (\vec{x}_i - \vec{\mu_c})(\vec{x}_i - \vec{\mu_c})^T\]
-            To avoid issues with numerical stability, the off-diagonal entries are set to zero, effectively assuming independence of the neuron activation values. Then, the mahalanobis distance is calculated to estimate the distance between classes at the final layer.
             \[d_{\text{mahalanobis}}(c_1, c_2) = \sqrt{((\vec{\mu_{c_1}} - \vec{\mu_{c_2}})^T\Sigma_{c_1}(\vec{\mu_{c_1}} -\vec{\mu_{c_2}}))}\]
+            To avoid issues with numerical stability, a low rank approximation of the covariance matrix was used, with small imaginary components being ignored. In addition to the flattened products of neurons and weights, this is also applied to the neurons themselves. 
+        
         \subsection{Memorisation and Significance}
-            We hypothesise that a network which has memorised it's training data would have significantly different properties in terms of sparsity and the separation of classes. To this end, we replicate the experiment specified in \cite{zhang2017understandingdeeplearningrequires} and train a modified version of AlexNet on CIFAR10 until it reaches zero error. The details of the training stay the same and will be provided in Appendix A. 
+            We hypothesise that a network which has memorised it's training data would have significantly different properties in terms of sparsity and the separation of classes. To this end, we replicate the experiment specified in \cite{zhang2017understandingdeeplearningrequires} and train a modified version of AlexNet on CIFAR10 until it reaches zero error. The details of the training stay the same and will be provided in Appendix B. 
         
         \subsection{Adversarial Attacks}
-            The above gives us a distribution on the activations for a given class. We compared the probabilities conditioned on the distribution of the class of the validation images subject when subjected to a PGD attack \cite{madry2019deeplearningmodelsresistant}. The parameters of the attack are given in Appendix B. 
+            The above gives us a distribution on the activations for a given class. We compared the probabilities conditioned on the distribution of the class of the validation images subject when subjected to a PGD attack \cite{madry2019deeplearningmodelsresistant}. The parameters of the attack are given in Appendix C. 
         
         \subsection{Manifold Entaglement}
             In the final hidden layer, the low-dimensional manifolds for different classes should be linearly separable. This is because the remaining transformations the network will apply are an affine hidden layer computation and a linear softmax computation. We estimate the dimensionality of the manifolds spanned by each class by inspecting the neurons for this layer, combining them into a matrix and finding it's rank. We further estimate the degree of overlap between the manifolds by combining the matrices for different classes and then applying the principle of inclusion and exclusion. Networks that have not overfit their training data should have manifolds with little overlap, while those which have should have entagled class manifolds. We additionally expect the manifolds to have smaller dimensionality for networks with better embeddings. 
 
     \section{Results}
         We examined the distributions for AlexNet, VGG, ResNet and InceptionV3. The experiments were run using PyTorch, and the weights for the pretrained versions of the networks were also taken from there. The datasets used were the validation sets for Imagenet \cite{russakovsky2015imagenetlargescalevisual}, and CIFAR10 \cite{Krizhevsky2009LearningML}
-        \subsection{Sparsity of Activations}
-            The following plots have the number of times a neuron activated over the entire validation set divided by the length of the validation set on the x axis, and the y-axis is the number of neurons that activate in that 'bin', divided by the total number of neurons.
-            The results indicate that training encourages sparsity quite strongly, with the proportions of neurons that are always on dropping from 0.2 and 0.1 to 0.05 and $<$ 0.01 on the last and second last layers respectively from the untrained model to the best model. The network fitting random labels has an extremely sparse penultimate layer, with the best network having some density to it and the overtrained network resembling a mid-point in between the random labelled and the best network. 
+        \subsection{Modelling Significant Activations as Bernoulli Distributions}
             
-            \begin{figure}[H]
-                \centering
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\linewidth]{new/small_alexnet_untrained_cifar10/activation_proportions/0.png}
-                    \subcaption{Untrained}
-                    % \label{fig:image1}
-                \end{minipage}
-                \hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_random_labels/activation_proportions/0.png}
-                    \subcaption{Random Labels}
-                    % \label{fig:image2}
-                \end{minipage}
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_250_epoch/activation_proportions/0.png}
-                    \subcaption{Overtrained}
-                    % \label{fig:image1}
-                \end{minipage}
-                \hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_best/activation_proportions/0.png}
-                    \subcaption{Best}
-                    % \label{fig:image2}
-                \end{minipage}
-                \hfill
+            \subsubsection{Sparsity of Activations}
+                The following plots have the number of times a neuron activated over the entire validation set divided by the length of the validation set on the x axis, and the y-axis is the number of neurons that activate in that 'bin', divided by the total number of neurons.
+                The results indicate that training encourages sparsity quite strongly, with the proportions of neurons that are always on dropping from 0.2 and 0.1 to 0.05 and $<$ 0.01 on the last and second last layers respectively from the untrained model to the best model. The network fitting random labels has an extremely sparse penultimate layer, with the best network having some density to it and the overtrained network resembling a mid-point in between the random labelled and the best network. 
                 
-                \caption{Activation Proportions from the class Airplane on the last and second last layers on different versions of the Modified AlexNet}
-                \label{fig:class_airplane}
-            \end{figure}
-            
-            \begin{figure}[H]
-                \centering
-                \begin{minipage}{0.45\textwidth}
+                \begin{figure}[H]
                     \centering
-                    \includegraphics[width=\linewidth]{new/small_alexnet_untrained_cifar10/activation_proportions/7.png}
-                    \subcaption{Untrained}
-                    % \label{fig:image1}
-                \end{minipage}
-                \hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_random_labels/activation_proportions/7.png}
-                    \subcaption{Random Labels}
-                    % \label{fig:image2}
-                \end{minipage}
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_250_epoch/activation_proportions/7.png}
-                    \subcaption{Overtrained}
-                    % \label{fig:image1}
-                \end{minipage}
-                \hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_best/activation_proportions/7.png}
-                    \subcaption{Best}
-                    % \label{fig:image2}
-                \end{minipage}
-                \hfill
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\linewidth]{new/small_alexnet_untrained_cifar10/activation_proportions/0.png}
+                        \subcaption{Untrained}
+                        % \label{fig:image1}
+                    \end{minipage}
+                    \hfill
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_random_labels/activation_proportions/0.png}
+                        \subcaption{Random Labels}
+                        % \label{fig:image2}
+                    \end{minipage}
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_250_epoch/activation_proportions/0.png}
+                        \subcaption{Overtrained}
+                        % \label{fig:image1}
+                    \end{minipage}
+                    \hfill
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_best/activation_proportions/0.png}
+                        \subcaption{Best}
+                        % \label{fig:image2}
+                    \end{minipage}
+                    \hfill
+                    
+                    \caption{Activation Proportions from the class Airplane on the last and second last layers on different versions of the Modified AlexNet}
+                    \label{fig:class_airplane}
+                \end{figure}
                 
-                \caption{Activation Proportions from the class Frog on the last and second last layers on different versions of the Modified AlexNet}
-                \label{fig:class_frog}
-            \end{figure}
-            The proportion histograms for the last 3 layers of alexnet on imagenet and imagenet-r are in figure \ref{fig:frequency_neuron_weight1}. For AlexNet, we can see that the randomly initialised network looks the same in terms of activation proportions for all the layers across both datasets. We once again see that training encourages sparsity in the network, even on the out of distribution set. The in-distribution dataset is sparser on the final layer and the penultimate layers. In fact, there is a significant increase in the proportion of stray activations on the out of distribution dataset, suggesting that sparsity may be a characteristic of learning. 
-            \begin{figure}[H]
-                \centering
-                \begin{minipage}{\textwidth}
+                \begin{figure}[H]
                     \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_untrained_imgr_out/activation_proportions/n02088466.png}
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\linewidth]{new/small_alexnet_untrained_cifar10/activation_proportions/7.png}
+                        \subcaption{Untrained}
+                        % \label{fig:image1}
+                    \end{minipage}
+                    \hfill
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_random_labels/activation_proportions/7.png}
+                        \subcaption{Random Labels}
+                        % \label{fig:image2}
+                    \end{minipage}
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_250_epoch/activation_proportions/7.png}
+                        \subcaption{Overtrained}
+                        % \label{fig:image1}
+                    \end{minipage}
+                    \hfill
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_best/activation_proportions/7.png}
+                        \subcaption{Best}
+                        % \label{fig:image2}
+                    \end{minipage}
+                    \hfill
                     
-                \end{minipage}\hfill
-                \begin{minipage}{\textwidth}
+                    \caption{Activation Proportions from the class Frog on the last and second last layers on different versions of the Modified AlexNet}
+                    \label{fig:class_frog}
+                \end{figure}
+                The proportion histograms for the last 3 layers of alexnet on imagenet and imagenet-r are in figure \ref{fig:frequency_neuron_weight1}. For AlexNet, we can see that the randomly initialised network looks the same in terms of activation proportions for all the layers across both datasets. We once again see that training encourages sparsity in the network, even on the out of distribution set. The in-distribution dataset is sparser on the final layer and the penultimate layers. In fact, there is a significant increase in the proportion of stray activations on the out of distribution dataset, suggesting that sparsity may be a characteristic of learning. 
+                \begin{figure}[H]
                     \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_imgr_out/activation_proportions/n02088466.png}
-                \end{minipage}
-                \begin{minipage}{\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_untrained_r/activation_proportions/n02088466.png}
+                    \begin{minipage}{\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_untrained_imgr_out/activation_proportions/n02088466.png}
+                        
+                    \end{minipage}\hfill
+                    \begin{minipage}{\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_imgr_out/activation_proportions/n02088466.png}
+                    \end{minipage}
+                    \begin{minipage}{\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_untrained_r/activation_proportions/n02088466.png}
+                        
+                    \end{minipage}\hfill
+                    \begin{minipage}{\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_r/activation_proportions/n02088466.png}
+                    \end{minipage}
                     
-                \end{minipage}\hfill
-                \begin{minipage}{\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_r/activation_proportions/n02088466.png}
-                \end{minipage}
+                    \caption{Frequencies of the significant neuron-weight activation proportions for the networks: untrained on imagenet, trained on imagenet, untrained on imagenet-r and  trained on imagenet-r from top to bottom}
+                    \label{fig:frequency_neuron_weight1}
+                \end{figure}
                 
-                \caption{Frequencies of the significant neuron-weight activation proportions for the networks: untrained on imagenet, trained on imagenet, untrained on imagenet-r and  trained on imagenet-r from top to bottom}
-                \label{fig:frequency_neuron_weight1}
-            \end{figure}
-            
-            % \begin{figure}[H]
-            %     \centering
-            %     \begin{minipage}{\textwidth}
-            %         \centering
-            %         \includegraphics[width=\textwidth]{new/alexnet_/alexnet_untrained_imgr_n01443537.png}
+                % \begin{figure}[H]
+                %     \centering
+                %     \begin{minipage}{\textwidth}
+                %         \centering
+                %         \includegraphics[width=\textwidth]{new/alexnet_/alexnet_untrained_imgr_n01443537.png}
+                        
+                %     \end{minipage}\hfill
+                %     \begin{minipage}{\textwidth}
+                %         \centering
+                %         \includegraphics[width=\textwidth]{new/alexnet_/alexnet_imgr_n01443537.png}
+                %     \end{minipage}
+                %     \begin{minipage}{\textwidth}
+                %         \centering
+                %         \includegraphics[width=\textwidth]{new/alexnet_/alexnet_untrained_r_n01443537.png}
+                        
+                %     \end{minipage}\hfill
+                %     \begin{minipage}{\textwidth}
+                %         \centering
+                %         \includegraphics[width=\textwidth]{new/alexnet_/alexnet_r_n01443537.png}
+                %     \end{minipage}
                     
-            %     \end{minipage}\hfill
-            %     \begin{minipage}{\textwidth}
-            %         \centering
-            %         \includegraphics[width=\textwidth]{new/alexnet_/alexnet_imgr_n01443537.png}
-            %     \end{minipage}
-            %     \begin{minipage}{\textwidth}
-            %         \centering
-            %         \includegraphics[width=\textwidth]{new/alexnet_/alexnet_untrained_r_n01443537.png}
-                    
-            %     \end{minipage}\hfill
-            %     \begin{minipage}{\textwidth}
-            %         \centering
-            %         \includegraphics[width=\textwidth]{new/alexnet_/alexnet_r_n01443537.png}
-            %     \end{minipage}
-                
-            %     \caption{Frequencies of the significant neuron-weight activation proportions for a single class top: untrained on imagenet, second: trained on imagenet, third: untrained on imagenet-r, bottom: trained on imagenet-r}
-            %     \label{fig:frequency_neuron_weight2}
-            % \end{figure}
+                %     \caption{Frequencies of the significant neuron-weight activation proportions for a single class top: untrained on imagenet, second: trained on imagenet, third: untrained on imagenet-r, bottom: trained on imagenet-r}
+                %     \label{fig:frequency_neuron_weight2}
+                % \end{figure}
     
-    
-    % \section{Patterns of Activation in Neuron-Weight Interactions}
+            \subsubsection{Intra-Dataset Separation: ID vs OOD datasets on Imagenet}
+                Figures \ref{fig:kl_divergences_imgr} and \ref{fig:kl_divergences_r} are the results for the KL divergences of alexnet after correcting for the dimensionality of the space. Each row represents the KL divergence from a class, while a column represents the KL divergences to a class. The values on the diagonals for KL divergence would have been 0 and we plot the entropy of the distribution for that class instead.  Between initialisation and the end of training on the in-distribution dataset, we see that the separation of classes increases greatly, while the entropy of the class distributions decreases simultneously. This decrease is much more noticable at the deeper layers of the network, and also extremely telling between the networks for the in-distribution classes and out of distribution classes. The OOD classes become more separated from each other but their entropies see no decrease after training is complete, even seeing significant increases in some cases. Looking at the euclidean distances, we see that the separation between classes increases even on the OOD dataset, which suggests that just the geometry of the vectors is not an accurate approach to checking how separated the classes are. 
+                % KL Matrix In Distribution
+                \begin{figure}[H]
+                    \centering
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_untrained_imgr_out/out_matrices/alexnet_kl_matrix.png}
+                    \end{minipage}\hfill
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_imgr_out/out_matrices/alexnet_kl_matrix.png}
+                    \end{minipage}
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_untrained_imgr_out_second_last/out_matrices/alexnet_kl_matrix.png}
+                    \end{minipage}\hfill
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_imgr_out_second_last/out_matrices/alexnet_kl_matrix.png}
+                    \end{minipage}
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_untrained_imgr_out_third_last/out_matrices/alexnet_kl_matrix.png}
+                    \end{minipage}\hfill
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_imgr_out_third_last/out_matrices/alexnet_kl_matrix.png}
+                    \end{minipage}
+                    \caption{KL divergences between different classes for the untrained (left) and trained (right) classes of alexnet on imagenet. From top to bottom, these are the values for the distributions for the last, second last and third last layers}
+                    \label{fig:kl_divergences_imgr}
+                \end{figure}
+                
+                % KL Matrix Out of Distribution
+                \begin{figure}[H]
+                    \centering
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_untrained_r/out_matrices/alexnet_kl_matrix.png}
+                        
+                    \end{minipage}\hfill
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_r/out_matrices/alexnet_kl_matrix.png}
+                    \end{minipage}
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_untrained_r_second_last/out_matrices/alexnet_kl_matrix.png}
+                        
+                    \end{minipage}\hfill
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_r_second_last/out_matrices/alexnet_kl_matrix.png}
+                    \end{minipage}
+                    
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_untrained_r_third_last/out_matrices/alexnet_kl_matrix.png}
+                        
+                    \end{minipage}\hfill
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_r_third_last/out_matrices/alexnet_kl_matrix.png}
+                    \end{minipage}
+                    
+                    \caption{KL divergences between different classes for the untrained (left) and trained (right) classes of alexnet on imagenet-r. From top to bottom, these are the values for the distributions for the last, second last and third last layers}
+                    \label{fig:kl_divergences_r}
 
-        \subsection{Divergences of Neuron Weight Interactions}
-            Figures \ref{fig:kl_divergences_imgr} and \ref{fig:kl_divergences_r} are the results for the KL divergences of alexnet after correcting for the dimensionality of the space. Each row represents the KL divergence from a class, while a column represents the KL divergences to a class. The values on the diagonals for KL divergence would have been 0 and we plot the entropy of the distribution for that class instead.  Between initialisation and the end of training on the in-distribution dataset, we see that the separation of classes increases greatly, while the entropy of the class distributions decreases simultneously. This decrease is much more noticable at the deeper layers of the network, and also extremely telling between the networks for the in-distribution classes and out of distribution classes. The OOD classes become more separated from each other but their entropies see no decrease after training is complete, even seeing significant increases in some cases. Looking at the euclidean distances, we see that the separation between classes increases even on the OOD dataset, which suggests that just the geometry of the vectors is not an accurate approach to checking how separated the classes are. 
-            % KL Matrix In Distribution
-            \begin{figure}[H]
-                \centering
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_untrained_imgr_out/out_matrices/alexnet_kl_matrix.png}
-                    
-                \end{minipage}\hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_imgr_out/out_matrices/alexnet_kl_matrix.png}
-                \end{minipage}
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_untrained_imgr_out_second_last/out_matrices/alexnet_kl_matrix.png}
-                    
-                \end{minipage}\hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_imgr_out_second_last/out_matrices/alexnet_kl_matrix.png}
-                \end{minipage}
+                \end{figure}
                 
-                \begin{minipage}{0.45\textwidth}
+                % Distance Matrix In Distribution
+                \begin{figure}[H]
                     \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_untrained_imgr_out_third_last/out_matrices/alexnet_kl_matrix.png}
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_untrained_imgr_out/out_matrices/alexnet_distance_matrix.png}
+                        
+                    \end{minipage}\hfill
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_imgr_out/out_matrices/alexnet_distance_matrix.png}
+                    \end{minipage}
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_untrained_imgr_out_second_last/out_matrices/alexnet_distance_matrix.png}
+                        
+                    \end{minipage}\hfill
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_imgr_out_second_last/out_matrices/alexnet_distance_matrix.png}
+                    \end{minipage}
                     
-                \end{minipage}\hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_imgr_out_third_last/out_matrices/alexnet_kl_matrix.png}
-                \end{minipage}
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_untrained_imgr_out_third_last/out_matrices/alexnet_distance_matrix.png}
+                        
+                    \end{minipage}\hfill
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_imgr_out_third_last/out_matrices/alexnet_distance_matrix.png}
+                    \end{minipage}
+                    
+                    \caption{Distances between different classes for the untrained (left) and trained (right) classes of alexnet on imagenet. From top to bottom, these are the values for the distributions for the last, second last and third last layers}
+                    \label{fig:distances_imgr}
+                \end{figure}
                 
-                \caption{KL divergences between different classes for the untrained (left) and trained (right) classes of alexnet on imagenet. From top to bottom, these are the values for the distributions for the last, second last and third last layers}
-                \label{fig:kl_divergences_imgr}
-            \end{figure}
-            
-            % KL Matrix Out of Distribution
-            \begin{figure}[H]
-                \centering
-                \begin{minipage}{0.45\textwidth}
+                % Distance Matrix Out of Distribution
+                \begin{figure}[H]
                     \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_untrained_r/out_matrices/alexnet_kl_matrix.png}
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_untrained_r/out_matrices/alexnet_distance_matrix.png}
+                        
+                    \end{minipage}\hfill
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_r/out_matrices/alexnet_distance_matrix.png}
+                    \end{minipage}
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_untrained_r_second_last/out_matrices/alexnet_distance_matrix.png}
+                        
+                    \end{minipage}\hfill
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_r_second_last/out_matrices/alexnet_distance_matrix.png}
+                    \end{minipage}
                     
-                \end{minipage}\hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_r/out_matrices/alexnet_kl_matrix.png}
-                \end{minipage}
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_untrained_r_second_last/out_matrices/alexnet_kl_matrix.png}
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_untrained_r_third_last/out_matrices/alexnet_distance_matrix.png}
+                        
+                    \end{minipage}\hfill
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/alexnet_r_third_last/out_matrices/alexnet_distance_matrix.png}
+                    \end{minipage}
                     
-                \end{minipage}\hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_r_second_last/out_matrices/alexnet_kl_matrix.png}
-                \end{minipage}
-                
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_untrained_r_third_last/out_matrices/alexnet_kl_matrix.png}
-                    
-                \end{minipage}\hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_r_third_last/out_matrices/alexnet_kl_matrix.png}
-                \end{minipage}
-                
-                \caption{KL divergences between different classes for the untrained (left) and trained (right) classes of alexnet on imagenet-r. From top to bottom, these are the values for the distributions for the last, second last and third last layers}
-                \label{fig:kl_divergences_r}
+                    \caption{Distances between different classes for the untrained (left) and trained (right) classes of alexnet on imagenet-r. From top to bottom, these are the values for the distributions for the last, second last and third last layers}
+                    \label{fig:distances_r}
 
-            \end{figure}
+                \end{figure}
+                
+                % Figures \ref{fig:cross_kl_divergence_a_to_b} and \ref{fig:cross_kl_divergence_b_to_a} show the divergences between classes and their OOD counterparts before and after training. We observe that the separation of the same class inside and outside the distribution decreases. The distributions becoming more similar might suggest that the model is in fact learning some characteristics common to across the training distribution. Additionally, the OOD distribution has a larger divergence from the ID distribution than the other way around. This would suggest that the OOD distribution is more chaotic than its ID counterpart. This is another difference that is more pronounced at the deeper layers, since as we saw earlier the entropy of the in-distribution activations reduces with depth. 
+                
+                % \begin{figure}[H]
+                %     \centering
+                %     \begin{minipage}{0.45\textwidth}
+                %         \centering
+                %         \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_untrained/kl_div_imgr_out_to_r_last_pairwise.png}
+                        
+                %     \end{minipage}\hfill
+                %     \begin{minipage}{0.45\textwidth}
+                %         \centering
+                %         \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_trained/kl_div_imgr_out_to_r_last_pairwise.png}
+                %     \end{minipage}
+                %     \begin{minipage}{0.45\textwidth}
+                %         \centering
+                %         \includegraphics[width=\textwidth]{/home/divijkhaitan/capstone_report/new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_untrained_second_last/kl_div_imgr_out_to_r_pairwise.png}
+                        
+                %     \end{minipage}\hfill
+                %     \begin{minipage}{0.45\textwidth}
+                %         \centering
+                %         \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_trained_second_last/kl_div_imgr_out_to_r_pairwise.png}
+                %     \end{minipage}
+                %     \begin{minipage}{0.45\textwidth}
+                %         \centering
+                %         \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_untrained_third_last/kl_div_imgr_out_to_r_pairwise.png}
+                        
+                %     \end{minipage}\hfill
+                %     \begin{minipage}{0.45\textwidth}
+                %         \centering
+                %         \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_trained_third_last/kl_div_imgr_out_to_r_pairwise.png}
+                %     \end{minipage}
+                %     \caption{KL divergences from the in-distribution classes to the out of distribution classes untrained (left) and trained (right). From top to bottom, these are for the final, second last layer and third last layers}
+                %     \label{fig:cross_kl_divergence_a_to_b}
+                
+                % \end{figure}
+                
+                % \begin{figure}[H]
+                %     \centering
+                %     \begin{minipage}{0.45\textwidth}
+                %         \centering
+                %         \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_untrained/kl_div_r_to_imgr_out_last_pairwise.png}
+                        
+                %     \end{minipage}\hfill
+                %     \begin{minipage}{0.45\textwidth}
+                %         \centering
+                %         \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_trained/kl_div_r_to_imgr_out_last_pairwise.png}
+                %     \end{minipage}
+                %     \begin{minipage}{0.45\textwidth}
+                %         \centering
+                %         \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_untrained_second_last/kl_div_r_to_imgr_out_pairwise.png}
+                        
+                %     \end{minipage}\hfill
+                %     \begin{minipage}{0.45\textwidth}
+                %         \centering
+                %         \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_trained_second_last/kl_div_r_to_imgr_out_pairwise.png}
+                %     \end{minipage}
+                %     \begin{minipage}{0.45\textwidth}
+                %         \centering
+                %         \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_untrained_third_last/kl_div_r_to_imgr_out_pairwise.png}
+                        
+                %     \end{minipage}\hfill
+                %     \begin{minipage}{0.45\textwidth}
+                %         \centering
+                %         \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_trained_third_last/kl_div_r_to_imgr_out_pairwise.png}
+                %     \end{minipage}
+                %     \caption{KL divergences from the out-of-distribution classes to the in distribution classes untrained (left) and trained (right). From top to bottom, these are for the final, second last layer and third last layers}
+                %     \label{fig:cross_kl_divergence_b_to_a}
+                % \end{figure}
             
-            \begin{figure}[H]
-                \centering
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_untrained_imgr_out/out_matrices/alexnet_distance_matrix.png}
-                    
-                \end{minipage}\hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_imgr_out/out_matrices/alexnet_distance_matrix.png}
-                \end{minipage}
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_untrained_imgr_out_second_last/out_matrices/alexnet_distance_matrix.png}
-                    
-                \end{minipage}\hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_imgr_out_second_last/out_matrices/alexnet_distance_matrix.png}
-                \end{minipage}
+            \subsubsection{Intra-Dataset Separation: Training, Random Labels and Overtraining on CIFAR10}
+                The KL divergence heatmaps for the CIFAR10 networks are in Figure \ref{fig:kl_divergence_small_alexnet}. The entropy is larger than the separation at initialisation, but training on random labels greatly increases the entropy of the distribution with a small difference in the inter class separation. For the best and overtrained networks, we see almost identical patterns of separation between classes, with the magnitude being smaller for the network. The decrease in relative separation might suggest that the network is 'forgetting' the relationships between classes and making the distributions more similar. 
                 
-                \begin{minipage}{0.45\textwidth}
+                % Last Layer
+                \begin{figure}[H]
                     \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_untrained_imgr_out_third_last/out_matrices/alexnet_distance_matrix.png}
-                    
-                \end{minipage}\hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_imgr_out_third_last/out_matrices/alexnet_distance_matrix.png}
-                \end{minipage}
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_untrained_cifar10/out_matrices/small_alexnet_kl_matrix.png}
+                        \subcaption{Untrained}
+                    \end{minipage}%
+                    \hfill
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_random_labels/out_matrices/small_alexnet_kl_matrix.png}
+                        \subcaption{Random Labels}
+                    \end{minipage}%
+                    \hfill
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_250_epoch/out_matrices/small_alexnet_kl_matrix.png}
+                        \subcaption{Overtrained}
+                    \end{minipage}%
+                    \hfill
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best/out_matrices/small_alexnet_kl_matrix.png}
+                        \subcaption{Best}
+                    \end{minipage}
+                    \caption{KL divergence heatmaps for the modified Alexnet models on CIFAR10}
+                    \label{fig:kl_divergence_small_alexnet}
+                \end{figure}
                 
-                \caption{Distances between different classes for the untrained (left) and trained (right) classes of alexnet on imagenet. From top to bottom, these are the values for the distributions for the last, second last and third last layers}
-                \label{fig:distances_imgr}
-            \end{figure}
+                % Last Layer Distances
+                \begin{figure}[H]
+                    \centering
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_untrained_cifar10/out_matrices/small_alexnet_distance_matrix.png}
+                        \subcaption{Untrained}
+                    \end{minipage}%
+                    \hfill
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_random_labels/out_matrices/small_alexnet_distance_matrix.png}
+                        \subcaption{Random Labels}
+                    \end{minipage}%
+                    \hfill
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_250_epoch/out_matrices/small_alexnet_distance_matrix.png}
+                        \subcaption{Overtrained}
+                    \end{minipage}%
+                    \hfill
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best/out_matrices/small_alexnet_distance_matrix.png}
+                        \subcaption{Best}
+                    \end{minipage}
+                    \caption{Distance divergence heatmaps for the modified Alexnet models on CIFAR10}
+                    \label{fig:distance_small_alexnet}
+                \end{figure}
             
-            % KL Matrix Out of Distribution
-            \begin{figure}[H]
-                \centering
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_untrained_r/out_matrices/alexnet_distance_matrix.png}
-                    
-                \end{minipage}\hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_r/out_matrices/alexnet_distance_matrix.png}
-                \end{minipage}
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_untrained_r_second_last/out_matrices/alexnet_distance_matrix.png}
-                    
-                \end{minipage}\hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_r_second_last/out_matrices/alexnet_distance_matrix.png}
-                \end{minipage}
-                
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_untrained_r_third_last/out_matrices/alexnet_distance_matrix.png}
-                    
-                \end{minipage}\hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_r_third_last/out_matrices/alexnet_distance_matrix.png}
-                \end{minipage}
-                
-                \caption{Distances between different classes for the untrained (left) and trained (right) classes of alexnet on imagenet-r. From top to bottom, these are the values for the distributions for the last, second last and third last layers}
-                \label{fig:distances_r}
 
-            \end{figure}
+                % Second Last Layer
+                \begin{figure}[H]
+                    \centering
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_untrained_cifar10_second_last/out_matrices/small_alexnet_kl_matrix.png}
+                        \subcaption{Untrained}
+                    \end{minipage}%
+                    \hfill
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_random_labels_second_last/out_matrices/small_alexnet_kl_matrix.png}
+                        \subcaption{Random Labels}
+                    \end{minipage}%
+                    \hfill
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_250_epoch_second_last/out_matrices/small_alexnet_kl_matrix.png}
+                        \subcaption{Overtrained}
+                    \end{minipage}%
+                    \hfill
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best_second_last/out_matrices/small_alexnet_kl_matrix.png}
+                        \subcaption{Best}
+                    \end{minipage}
+                    \caption{KL divergence heatmaps for the modified Alexnet models on CIFAR10}
+                    \label{fig:kl_divergence_small_alexnet_second_last}
+                \end{figure}
+                
+                % Second Last Layer Distance
+                \begin{figure}[H]
+                    \centering
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_untrained_cifar10_second_last/out_matrices/small_alexnet_distance_matrix.png}
+                        \subcaption{Untrained}
+                    \end{minipage}%
+                    \hfill
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_random_labels_second_last/out_matrices/small_alexnet_distance_matrix.png}
+                        \subcaption{Random Labels}
+                    \end{minipage}%
+                    \hfill
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_250_epoch_second_last/out_matrices/small_alexnet_distance_matrix.png}
+                        \subcaption{Overtrained}
+                    \end{minipage}%
+                    \hfill
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best_second_last/out_matrices/small_alexnet_distance_matrix.png}
+                        \subcaption{Best}
+                    \end{minipage}
+                    \caption{Distance divergence heatmaps for the modified Alexnet models on CIFAR10}
+                    \label{fig:distance_small_alexnet_second_last}
+                \end{figure}
+
+            \subsubsection{Inter-Dataset Separation: CIFAR10, TinyImagenet, SVHN, CIFAR10.1}
+                The goal of this is to quantify the shift in distribution across different validation sets. We measured various distances between the aggregate distributions and got the following results 
+                
+                \begin{figure}[H]
+                    \centering
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/consolidated_plots/kl_div/ref_to_other_overall.png}
+                        \subcaption{KL Divergence of different datasets from CIFAR10}
+                    \end{minipage}
+                    
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/consolidated_plots/inter_dist/ref_to_other_overall.png}
+                        \subcaption{Intersection distance of different datasets from CIFAR10}
+                    \end{minipage}
+                \end{figure}
+                
+            \subsubsection{Log Probabilities Under Different Prior Distributions}
+                The goal for this was to use the log probabilities as a score for OOD detection. The dataset conditional log probabilities were computed for all the images across different datasets. The distribution over the validation sets for the 4 datasets under the assumption that they come from the same distribution as the training sets for CIFAR10, CIFAR10.1, SVHN and tiny-imagenet are shown below. There is little distinction between different datasets, suggesting that the training sets cannot be used for this task. When the same dataset is plot taking both activations and prior distributions from the validation set, the distinction is much clearer.
+                \begin{figure}
+                    \centering
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/train_test_kde_plots/log_prob_analysis_train_test_cifar10_10.1_svhn_tinyimagenet.png}                        
+                        \subcaption{Log Probabilities of test activations on training distributions}
+                    \end{minipage}
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/test_kde_plots/log_prob_analysis_cifar10_10.1_svhn_tinyimagenet.png}                        
+                        \subcaption{Log Probabilities test activations on test distributions}
+                    \end{minipage}
+                    \caption{Last Layer Circuits}
+                \end{figure}
+                \begin{figure}
+                    \centering
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/train_test_kde_plots/log_prob_analysis_train_test_cifar10_10.1_svhn_tinyimagenet_second.png}                        
+                        \subcaption{Log Probabilities of test activations on training distributions}
+                    \end{minipage}
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/test_kde_plots/log_prob_analysis_cifar10_10.1_svhn_tinyimagenet_second.png}                        
+                        \subcaption{Log Probabilities test activations on test distributions}
+                    \end{minipage}
+                    \caption{Second Last Layer Circuits}
+                \end{figure}
+                \begin{figure}
+                    \centering
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/train_test_kde_plots/log_prob_analysis_train_test_cifar10_10.1_svhn_tinyimagenet_third.png}                        
+                        \subcaption{Log Probabilities of test activations on training distributions}
+                    \end{minipage}
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/test_kde_plots/log_prob_analysis_cifar10_10.1_svhn_tinyimagenet_third.png}                        
+                        \subcaption{Log Probabilities test activations on test distributions}
+                    \end{minipage}
+                    \caption{Third Last Layer Circuits}
+                \end{figure}
+        \subsection{Gaussian Fitting}
             
-            Figures \ref{fig:cross_kl_divergence_a_to_b} and \ref{fig:cross_kl_divergence_b_to_a} show the divergences between classes and their OOD counterparts before and after training. We observe that the separation of the same class inside and outside the distribution decreases. The distributions becoming more similar might suggest that the model is in fact learning some characteristics common to across the training distribution. Additionally, the OOD distribution has a larger divergence from the ID distribution than the other way around. This would suggest that the OOD distribution is more chaotic than its ID counterpart. This is another difference that is more pronounced at the deeper layers, since as we saw earlier the entropy of the in-distribution activations reduces with depth. 
+            % \subsubsection{Activation Statistics}
+            %     The max and min activations for each class were computed and the space was compressed onto the interval [0, 1]. We computed the mean and median activation for the neuron values across different values, which are plotted below. The stark difference for the mean and median activations across the neurons indicates that there is significant negative skew as well as much sparsity among the activations of the neurons.
             
-            \begin{figure}[H]
+            %     \begin{figure}[H]
+            %         \centering
+            %         \begin{minipage}{0.25\textwidth}
+            %             \centering
+            %             \includegraphics[width=\textwidth]{new/small_alexnet_untrained_cifar10/probability_results/}
+            %             \subcaption{Untrained}
+            %         \end{minipage}%
+            %         \hfill
+            %         \begin{minipage}{0.25\textwidth}
+            %             \centering
+            %             \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_random_labels/probability_results/}
+            %             \subcaption{Random Labels}
+            %         \end{minipage}%
+            %         \hfill
+            %         \begin{minipage}{0.25\textwidth}
+            %             \centering
+            %             \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_250_epoch/probability_results/}
+            %             \subcaption{Overtrained}
+            %         \end{minipage}%
+            %         \hfill
+            %         \begin{minipage}{0.25\textwidth}
+            %             \centering
+            %             \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best/probability_results/}
+            %             \subcaption{Best}
+            %         \end{minipage}
+            %         \caption{KL divergence heatmaps for the modified Alexnet models on CIFAR10}
+            %         \label{fig:kl_divergence_small_alexnet}
+            %     \end{figure}
+                
+            \subsubsection{Intra-Dataset Separation: Training, Random Labels and Overtraining on CIFAR10}
+                For this, we used the mahalanobis between different gaussians. Since the distance is defined between a distribution and a point, we use the measure the distance of the mean of a target distribution from a base distribution. 
+                
+                \begin{figure}[H]
+                    \centering
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_untrained_cifar10/probability_results/small_alexnet_mahalanobis_matrix.png}
+                        \subcaption{Untrained}
+                    \end{minipage}%
+                    \hfill
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_random_labels/probability_results/small_alexnet_mahalanobis_matrix.png}
+                        \subcaption{Random Labels}
+                    \end{minipage}%
+                    \hfill
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_250_epoch/probability_results/small_alexnet_mahalanobis_matrix.png}
+                        \subcaption{Overtrained}
+                    \end{minipage}%
+                    \hfill
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best/probability_results/small_alexnet_mahalanobis_matrix.png}
+                        \subcaption{Best}
+                    \end{minipage}
+                    \caption{Mahanlanobis Distance heatmaps for the modified Alexnet models on CIFAR10}
+                    \label{fig:mahalanobis_small_alexnet}
+                \end{figure}                
+                
+                These results align with our expectations, with the separation between classes increasing over training, staying roughly the same between initialisation and random label fitting and decreasing when being over-trained.
+                % \begin{figure}[H]
+                %     \centering
+                %     \begin{minipage}{0.25\textwidth}
+                %         \centering
+                %         \includegraphics[width=\textwidth]{new/small_alexnet_untrained_cifar10/probability_results/small_alexnet_wasserstein_matrix.png}
+                %         \subcaption{Untrained}
+                %     \end{minipage}%
+                %     \hfill
+                %     \begin{minipage}{0.25\textwidth}
+                %         \centering
+                %         \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_random_labels/probability_results/small_alexnet_wasserstein_matrix.png}
+                %         \subcaption{Random Labels}
+                %     \end{minipage}%
+                %     \hfill
+                %     \begin{minipage}{0.25\textwidth}
+                %         \centering
+                %         \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_250_epoch/probability_results/small_alexnet_wasserstein_matrix.png}
+                %         \subcaption{Overtrained}
+                %     \end{minipage}%
+                %     \hfill
+                %     \begin{minipage}{0.25\textwidth}
+                %         \centering
+                %         \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best/probability_results/small_alexnet_wasserstein_matrix.png}
+                %         \subcaption{Best}
+                %     \end{minipage}
+                %     \caption{Wasserstein Distance heatmaps for the modified Alexnet models on CIFAR10}
+                %     \label{fig:wasserstein_small_alexnet}
+                % \end{figure}                
+                
+            \subsubsection{Inter-Dataset Separation: CIFAR10, TinyImagenet, SVHN, CIFAR10.1}
+                Comparing the distances that different datasets have from cifar10, we do not see any discernible pattern. The training dataset and cifar 10.1 are further away from the validation dataset than SVHN, which is out of distribution. Further, the chosen classes from tiny imagenet are semantically more similar to cifar10 than svhn, yet the distance that has from the dataset is much higher than svhn. These results need additional investigation, possibly at the embedding layer.
+                \begin{figure}[H]
+                    \centering
+                    \includegraphics[width=\textwidth]{new/consolidated_plots/mahalanobis_dist/ref_to_other_overall.png}
+                \end{figure}
+        
+            \subsubsection{Intra-Dataset Separation of Neurons: Training, Random Labels and Overtraining on CIFAR10}
+                For this, we used the mahalanobis between different gaussians. Since the distance is defined between a distribution and a point, we use the measure the distance of the mean of a target distribution from a base distribution. 
+                    
+                \begin{figure}[H]
+                    \centering
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_untrained_cifar10/probability_results/small_alexnet_mahalanobis_matrix_neurons.png}
+                        \subcaption{Untrained}
+                    \end{minipage}%
+                    \hfill
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_random_labels/probability_results/small_alexnet_mahalanobis_matrix_neurons.png}
+                        \subcaption{Random Labels}
+                    \end{minipage}%
+                    \hfill
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_250_epoch/probability_results/small_alexnet_mahalanobis_matrix_neurons.png}
+                        \subcaption{Overtrained}
+                    \end{minipage}%
+                    \hfill
+                    \begin{minipage}{0.25\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best/probability_results/small_alexnet_mahalanobis_matrix_neurons.png}
+                        \subcaption{Best}
+                    \end{minipage}
+                    \caption{Mahanlanobis Distance heatmaps for the modified Alexnet models on CIFAR10}
+                    \label{fig:mahalanobis_small_alexnet_neurons}
+                \end{figure}                
+                
+                These results are almost identical to the neuron-weights, and the conclusions remain the same. The notable exception is the effect of overtraining, where the separation between neurons for different classes becomes extremely high between certain pairs of classes. This suggests that the distribution over neurons is more sensitive to overtraining as opposed to inspecting the neuron-weight products.
+
+            \subsubsection{Log Probabilities Under Different Prior Distributions for Circuits}
+                Below are curves for the different log probabilities of the circuit values when modelled as gaussians. The interesting point to note here is the drastically different shape of CIFAR10.1 compared to CIFAR10. This suggests that the distributions in question are quite data hungry and need a large number of samples before they converge. Once again, a distribution shift to a different task (Optical Character Recognition for SVHN) is clearly seen, with the log probabilties having very little overlap. However, both CIFAR10 and TinyImagenet are natural image datasets, do they are not as easy to tease apart at the final layer. We were unable to probe past the final layer in the gaussian setting due to computational constraints, but this requires further investigation.
+                \begin{figure}
+                    \centering
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/train_test_kde_plots/log_prob_analysis_train_test_cifar10_10.1_svhn_tinyimagenet_gaussian.png}                        
+                        \subcaption{Log Probabilities of test activations on training distributions}
+                    \end{minipage}
+                    \begin{minipage}{0.45\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/test_kde_plots/log_prob_analysis_cifar10_10.1_svhn_tinyimagenet.png}                        
+                        \subcaption{Log Probabilities of test activations on training distributions}
+                    \end{minipage}
+                    \caption{Last Layer Circuits}
+                \end{figure}
+            \subsubsection{Log Probabilities Under Different Prior Distributions for Neurons}
+            \begin{figure}
                 \centering
                 \begin{minipage}{0.45\textwidth}
                     \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_untrained/kl_div_imgr_out_to_r_last_pairwise.png}
-                    
-                \end{minipage}\hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_trained/kl_div_imgr_out_to_r_last_pairwise.png}
+                    \includegraphics[width=\textwidth]{new/train_test_kde_plots/log_prob_analysis_train_test_cifar10_10.1_svhn_tinyimagenet_gaussian_neurons_test.png}                        
+                    \subcaption{Log Probabilities of test activations on training distributions}
                 \end{minipage}
                 \begin{minipage}{0.45\textwidth}
                     \centering
-                    \includegraphics[width=\textwidth]{/home/divijkhaitan/capstone_report/new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_untrained_second_last/kl_div_imgr_out_to_r_pairwise.png}
-                    
-                \end{minipage}\hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_trained_second_last/kl_div_imgr_out_to_r_pairwise.png}
+                    \includegraphics[width=\textwidth]{new/test_kde_plots/log_prob_analysis_cifar10_10.1_svhn_tinyimagenet_gaussian_neurons.png}                        
+                    \subcaption{Log Probabilities of test activations on training distributions}
                 \end{minipage}
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_untrained_third_last/kl_div_imgr_out_to_r_pairwise.png}
-                    
-                \end{minipage}\hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_trained_third_last/kl_div_imgr_out_to_r_pairwise.png}
-                \end{minipage}
-                \caption{KL divergences from the in-distribution classes to the out of distribution classes untrained (left) and trained (right). From top to bottom, these are for the final, second last layer and third last layers}
-                \label{fig:cross_kl_divergence_a_to_b}
-            
-            \end{figure}
-            
-            \begin{figure}[H]
-                \centering
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_untrained/kl_div_r_to_imgr_out_last_pairwise.png}
-                    
-                \end{minipage}\hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_trained/kl_div_r_to_imgr_out_last_pairwise.png}
-                \end{minipage}
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_untrained_second_last/kl_div_r_to_imgr_out_pairwise.png}
-                    
-                \end{minipage}\hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_trained_second_last/kl_div_r_to_imgr_out_pairwise.png}
-                \end{minipage}
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_untrained_third_last/kl_div_r_to_imgr_out_pairwise.png}
-                    
-                \end{minipage}\hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/alexnet_cross_kl_divergence_alexnet_imgr_out__r_trained_third_last/kl_div_r_to_imgr_out_pairwise.png}
-                \end{minipage}
-                \caption{KL divergences from the out-of-distribution classes to the in distribution classes untrained (left) and trained (right). From top to bottom, these are for the final, second last layer and third last layers}
-                \label{fig:cross_kl_divergence_b_to_a}
-            \end{figure}
-            The KL divergence heatmaps for the CIFAR10 networks are in Figure \ref{fig:kl_divergence_small_alexnet}. The entropy is larger than the separation at initialisation, but training on random labels greatly increases the entropy of the distribution with a small difference in the inter class separation. For the best and overtrained networks, we see almost identical patterns of separation between classes, with the magnitude being smaller for the network. The decrease in relative separation might suggest that the network is 'forgetting' the relationships between classes and making the distributions more similar. 
-            \begin{figure}[H]
-                \centering
-                \begin{minipage}{0.25\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_untrained_cifar10/out_matrices/small_alexnet_kl_matrix.png}
-                    \subcaption{Untrained}
-                \end{minipage}%
-                \hfill
-                \begin{minipage}{0.25\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_random_labels/out_matrices/small_alexnet_kl_matrix.png}
-                    \subcaption{Random Labels}
-                \end{minipage}%
-                \hfill
-                \begin{minipage}{0.25\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_250_epoch/out_matrices/small_alexnet_kl_matrix.png}
-                    \subcaption{Overtrained}
-                \end{minipage}%
-                \hfill
-                \begin{minipage}{0.25\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best/out_matrices/small_alexnet_kl_matrix.png}
-                    \subcaption{Best}
-                \end{minipage}
-                \caption{KL divergence heatmaps for the modified Alexnet models on CIFAR10}
-                \label{fig:kl_divergence_small_alexnet}
-            \end{figure}
-            \begin{figure}[H]
-                \centering
-                \begin{minipage}{0.25\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_untrained_cifar10/out_matrices/small_alexnet_distance_matrix.png}
-                    \subcaption{Untrained}
-                \end{minipage}%
-                \hfill
-                \begin{minipage}{0.25\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_random_labels/out_matrices/small_alexnet_distance_matrix.png}
-                    \subcaption{Random Labels}
-                \end{minipage}%
-                \hfill
-                \begin{minipage}{0.25\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_250_epoch/out_matrices/small_alexnet_distance_matrix.png}
-                    \subcaption{Overtrained}
-                \end{minipage}%
-                \hfill
-                \begin{minipage}{0.25\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best/out_matrices/small_alexnet_distance_matrix.png}
-                    \subcaption{Best}
-                \end{minipage}
-                \caption{Distance divergence heatmaps for the modified Alexnet models on CIFAR10}
-                \label{fig:distance_small_alexnet}
+                \caption{Last Layer Neurons}
             \end{figure}
         
-
-            \begin{figure}[H]
-                \centering
-                \begin{minipage}{0.25\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_untrained_cifar10_second_last/out_matrices/small_alexnet_kl_matrix.png}
-                    \subcaption{Untrained}
-                \end{minipage}%
-                \hfill
-                \begin{minipage}{0.25\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_random_labels_second_last/out_matrices/small_alexnet_kl_matrix.png}
-                    \subcaption{Random Labels}
-                \end{minipage}%
-                \hfill
-                \begin{minipage}{0.25\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_250_epoch_second_last/out_matrices/small_alexnet_kl_matrix.png}
-                    \subcaption{Overtrained}
-                \end{minipage}%
-                \hfill
-                \begin{minipage}{0.25\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best_second_last/out_matrices/small_alexnet_kl_matrix.png}
-                    \subcaption{Best}
-                \end{minipage}
-                \caption{KL divergence heatmaps for the modified Alexnet models on CIFAR10}
-                \label{fig:kl_divergence_small_alexnet_second_last}
-            \end{figure}
-            \begin{figure}[H]
-                \centering
-                \begin{minipage}{0.25\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_untrained_cifar10_second_last/out_matrices/small_alexnet_distance_matrix.png}
-                    \subcaption{Untrained}
-                \end{minipage}%
-                \hfill
-                \begin{minipage}{0.25\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_random_labels_second_last/out_matrices/small_alexnet_distance_matrix.png}
-                    \subcaption{Random Labels}
-                \end{minipage}%
-                \hfill
-                \begin{minipage}{0.25\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_250_epoch_second_last/out_matrices/small_alexnet_distance_matrix.png}
-                    \subcaption{Overtrained}
-                \end{minipage}%
-                \hfill
-                \begin{minipage}{0.25\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best_second_last/out_matrices/small_alexnet_distance_matrix.png}
-                    \subcaption{Best}
-                \end{minipage}
-                \caption{Distance divergence heatmaps for the modified Alexnet models on CIFAR10}
-                \label{fig:distance_small_alexnet_second_last}
-            \end{figure}
-
-        \subsection{Adversarial Attacks and Probability Distributions}
+        \subsection{The Effect of Adversarial Attacks on Probability Distributions}
             Presented below are the results for just the modified version of AlexNet on CIFAR10, because running this would not be meaningful on an untrained network or an OOD dataset. The results for the version of the network on random labels compared to the version trained to convergence normally are presented below. 
         
-            We see that on the network with random labels, there is no consistent effect that the attack seems to have. Some classes see a sharp increase in the probabilities under the class distribution, while some see a decrease. On the trained network, however, we see a more consistent decrease in likelihood under the class distribution from the clean samples to the adversarial samples. 
-            
+            The most striking feature of the adversarial attack is that the distributions over the circuits being used in the last and second-last layers are extremely similar. However, in the third-last layer we see a much larger separation between the clean and adversarial distributions. This suggests that while imperceptible, the convolutional layers are able to pick up on the noise added to the image and extract the features into a different location as compared to the clean images. Further, it also suggests that the MLP layers may be squashing all the data into a smaller subspace. This gets even more interesting when looking at the plots of the gaussian log probabiltiies. The separation at the last layer is extremely stark, which suggests that even though the same circuits are being activated for the clean and adversarial inputs, they are being activated in a noticably different fashion. The results presented are for the training distribution on the test set, because the differences between the two were not significant.
             \begin{figure}[H]
                 \centering
-                \begin{minipage}{0.45\textwidth}
+                \begin{minipage}{0.32\textwidth}
                     \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_random_labels/probability_results/adversarial_probability_comparison.png}
-                \end{minipage}
+                    \includegraphics[width=\textwidth]{new/adv/log_prob_analysis_cifar10_10.1_svhn_tinyimagenet_adv.png}
+                    \subcaption{Last Layer Circuits}
+                \end{minipage}%
+                \hfill
+                \begin{minipage}{0.32\textwidth}
+                    \centering
+                    \includegraphics[width=\textwidth]{new/adv/log_prob_analysis_cifar10_10.1_svhn_tinyimagenet_adv_second.png}
+                    \subcaption{Second Last Layer Circuits}
+                \end{minipage}%
+                \hfill
+                \begin{minipage}{0.32\textwidth}
+                    \centering
+                    \includegraphics[width=\textwidth]{new/adv/log_prob_analysis_cifar10_10.1_svhn_tinyimagenet_adv_third.png}
+                    \subcaption{Third Last Layer Circuits}
+                \end{minipage}%
+                \caption{Change in Log Probabilities under an Adversarial Attack}
+                \label{fig:adv_log_probs}
+            \end{figure}                
             
-                \begin{minipage}{0.45\textwidth}
+            To test this hypothesis, we compared the norms of adversarially attacked inputs to clean inputs and the results are attached below. There is a clear cut separation in between the norms of both datasets, which lends credence to the idea that adversarially attacked inputs push the embedding closer to the null space of the liner layers. Note that this is with a much weaker PGD attack (10 iterations), and the shift is extremely noticable. 
+            \begin{figure}[H]
+                \centering
+                \begin{minipage}{0.32\textwidth}
                     \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_250_epoch/probability_results/adversarial_probability_comparison.png}
-                    
-                \end{minipage}\hfill
-                \begin{minipage}{0.45\textwidth}
+                    \includegraphics[width=\textwidth]{new/pgd_small_alexnet/norm_comparison_small_alexnet_10_iter_layer_index_-1.png}
+                    \subcaption{Last Layer}
+                \end{minipage}%
+                \hfill
+                \begin{minipage}{0.32\textwidth}
                     \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best/probability_results/adversarial_probability_comparison.png}
-                \end{minipage}
+                    \includegraphics[width=\textwidth]{new/pgd_small_alexnet/norm_comparison_small_alexnet_10_iter_layer_index_-2.png}
+                    \subcaption{Second Last Layer}
+                \end{minipage}%
+                \hfill
+                \begin{minipage}{0.32\textwidth}
+                    \centering
+                    \includegraphics[width=\textwidth]{new/pgd_small_alexnet/norm_comparison_small_alexnet_10_iter_layer_index_-3.png}
+                    \subcaption{Third Last Layer}
+                \end{minipage}%
+                \caption{Change in Embedding Norms under an Adversarial Attack}
+                \label{fig:adv_norms}
+            \end{figure}                
             
-                \caption{Adversarial Probability Comparison for different classes for the random network (top), best network (left) and the overtrained network (right)}
-                \label{fig:adversarial_probabilities_small_alexnet}
-            \end{figure}
-
         \subsection{Manifold Entanglement}
             The difference between the manifolds for both networks is quite stark. The random network not only has significant overlap between classes, the manifolds also have much higher rank. The clean network doesn't see any overlap at all, and has lower rank manifolds. Additionally, we see that the overtrained manifold has several classes actually increase in rank. This lines up with the hypothesis of the 'optimal' solution being a substructure with lower rank. 
             \begin{figure}[H]
@@ -728,13 +1001,33 @@
 
 
     \appendix
-
+    
+    \section{TinyImagenet to CIFAR10 class mapping}
+        \begin{tabular}{|c|c|}
+            \hline
+            Class in CIFAR10 & WNIDs from TinyImagenet \\
+            \hline
+            automobile & n03599486, n02814533, n03444034, n03100240 \\
+            \hline
+            bird & n02058221, n02002724 \\
+            \hline
+            cat & n02124075, n02125311, n02123394, n02509815, n02123045 \\
+            \hline
+            deer & n02423022 \\
+            \hline
+            dog & n02106662, n02099712, n02094433, n02085620 \\
+            \hline
+            frog & n01641577, n01644900 \\
+            \hline
+            truck & n04146614, n02917067, n04465501, n04487081 \\
+            \hline
+        \end{tabular}
     \section{Details for Modified Alexnet}
         The modified version of Alexnet is adapted to the CIFAR10 dataset, which is much smaller than the Imagenet dataset that Alexnet was built for. The convolutional block here is a 5 $\times$ 5 convolution, followed by a 3 $\times$ 3 max pool and a local response normalisation layer with size 5, $\alpha=0.0001$, $\beta=0.75$ and $k=2$. Two convolutional blocks are followed by a two fully-connected hidden layers with 384 and 192 neurons, with the output having 10 neurons. The output is softmax activated, while the other layers are ReLU activated.
 
         The optimizer used is SGD, with the initial learning rate set to 0.01, decaying by 0.95 after every epoch. No explicit regularisation such as dropout or weight decay are used. Each 32 $\times$ 32 image is cropped to a 28 $\times$ 28 resolution, with each image \textit{independently} standardised to have zero mean and unit standard deviation.
 
-    \section{Appendix B: PGD Attack Details}
+    \section{PGD Attack Details}
         The Projected Gradient Descent attacks were carried out in 50 iterations, with a step size of 0.001 and a radius of 0.03. The PCA was thresholded until it explained 95\% of the variance from the activations. 
 
 \end{document}
