@@ -1,10 +1,13 @@
 \documentclass{article}
 \usepackage{graphicx} % Required for inserting images
 \usepackage{float}
+\usepackage{booktabs} % For better horizontal lines
+
 \usepackage[T1]{fontenc}
 % \title{Analysing the Robustness of Deep Neural Networks}
 % \author{Divij Khaitan}
 % \date{\today}
+\usepackage{longtable}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{subcaption}
@@ -31,17 +34,26 @@
     % Main Content
     \pagenumbering{arabic} % Switch to Arabic numerals
     \section{Introduction}
-        The goal of this project is to introduce a new framework for the analysis of the robustness properties of deep neural networks by analysing the patterns of neuron activations. The goals of this framework are
+        The goal of this project is to introduce a new framework for the analysis of the robustness properties of deep neural networks by analysing the patterns of neuron activations. A shortcoming of the existing work on out-of-distribution detection is that the notions of training and test distributions are very loosely defined in literature, and isn't clear if they can be well defined at all. However, the values taken on by the neurons and circuits in a neural network can be used to define a distribution. The goals of this framework are
         \begin{enumerate}
             \item 
-                Defining 'training distributions' with regards to a trained network as opposed to a training dataset
+                Defining data distributions with regards to a trained network as opposed to a training dataset
             \item 
                 Provide a diagnostic tool to detect when a network has overfit with polynomial overhead over the training process
-            
-        \end{enumerate}        
-        
+            \item 
+                To detect distribution shifts on same-task transfer learning before deployment
+        \end{enumerate}
+        Our contributions are as follows 
+        \begin{itemize}
+                \item 
+                    Providing a framework to assess the robustness of a trained neural network in a more principled manner than checking accuracy or perturbations that may never naturally occur.
+                \item 
+                    Extracting distributions from trained networks to address the problem of distribution shifts in a principled manner 
+                \item 
+                    Developing a method for checking distances between datasets at deployment-time
+            \end{itemize}
+
         \subsection{Related work}
-            
             \indent \textbf{Generalisation/Implicit Regularisation}: Zhang et. al. showed as early as 2017 that even AlexNet has enough capacity to fit all of imagenet with completely random labels perfectly when given enough time \cite{zhang2017understandingdeeplearningrequires}. This suggests that although networks have extremely high 'capacity', they do not use all of it in practice and that contrary to statistical wisdom, they are not overfitting as a result of overparameterisation. Arora et. al. showed that overparameterisation provides a speed up to the optimisation of neural networks and provided bounds for the generalisation error of two layer ReLU networks \cite{pmlr-v80-arora18a}. Soltanolkotabi and Oymak showed that networks that polynomially overparameterised in the size of the input are resistant to label corrpution, with the final parameters being close to their initialised values \cite{pmlr-v108-li20j}. A major hypothesis in this area is that stochastic gradient descent (SGD) as a training method introduces an 'implicit regularisation' into the training of a deep network. Norm minimisation was one explanation for this behaviour, first put forth by \cite{neyshabur2015searchrealinductivebias}. Several notions of complexity have been put forth, including VC dimension and Rademacher complexity, see \cite{neyshabur2017implicitregularizationdeeplearning} for a more granular view of these. Examples where all matrix norms diverge were constructed in \cite{razin2020implicitregularizationdeeplearning}, indicating that the relationship between weight decay and implicit regularisation requires more inspection. This relationship has also been questioned by \cite{arora2019implicitregularizationdeepmatrix}, which shows that for the case of matrix factorisation, matrix norms are insufficient to describe the action of gradient-based optimisation. This paper also shows that adding depth to matrix factorisation encourages low rank solutions, which improve the accuracy of the reconstruction. \cite{gissin2019implicitbiasdepthincremental} formally showed that deep networks learn 'incrementally', and while shallow networks can exhibit similar behaviour they do so for a small set of initial conditions. \cite{arpit2017closerlookmemorizationdeep} showed that SGD behaves differently on noise as opposed to actual datasets, and that dropout works better than noise injection for hindering memorisation while promoting generalisation
 
             \textbf{Out of Distribution Detection}: When considering open world deployment of networks, it simply isn't possible to train them on exhaustive partition of every input they can expect. Thus, it becomes important to develop mechanisms that allow users to detect when an input is outside the training distribution of a model. The first major work that tackled this problem with some effectiveness was \cite{hendrycks2018baselinedetectingmisclassifiedoutofdistribution}, which uses $-\max_i \softmax(f(x)_i)$ as a means of detecting if a particular input is outside the training distribution. This is analogous to treating the magnitude of the softmax output as a confidence measure, which isn't entirely accurate as pointed out by the authors. However, this has proven to be a baseline which is difficult to beat non-trivially. \cite{hendrycks2019deepanomalydetectionoutlier} describes a method for fine-tuning trained models to detect OOD inputs using unlabelled data and the KL divergence from a uniform distribution. ODIN \cite{liang2020enhancingreliabilityoutofdistributionimage} has empirically shown excellent performance on OOD detection, but requires tuning hyperparameters beforehand. \cite{lee2018simpleunifiedframeworkdetecting} Uses a similar idea of creating a probability distribution over feature spaces and uses the minimum mahalanobis distance as a classifier, and also use it to show that tuning their classifier on certain adversarial attacks adds robustness to other adversarial attacks. The authors assume a multivariate gaussian distribution on the class-conditional softmax probability vectors, and for a vector output the class for which the probability vector has the smallest mahalanobis distance. All of these fall into the class of post-hoc OOD detection methods, which includes \cite{liu2021energybasedoutofdistributiondetection, sun2022diceleveragingsparsificationoutofdistribution, morteza2021provableguaranteesunderstandingoutofdistribution}. Another line of thought introduced in \cite{sun2021reactoutofdistributiondetectionrectified} suggests that large activation values are caused by improper normalisation and that activation clipping separates the in and out of distribution data is also explored by \cite{ahn2023lineoutofdistributiondetectionleveraging} when combining it with a significance measure based on shapely values.
@@ -56,16 +68,6 @@
             \textbf{Manifold Hypothesis}: This is an idea that pre-dates deep learning, that most real-world datasets in high dimensions have an underlying low dimensional structure. In the context of machine learning, it has primarily been studied from the perspective of dimensionality reduction, reducing a set of points in a high dimensional space to one in a low dimensiona space which is equivalent to it. \cite{fefferman2013testingmanifoldhypothesis} develops an algorithm to test the hypothesis, and \cite{NIPS2010_8a1e808b} discusses the sample complexity of the problem. See \cite{meil2023manifoldlearningwhathow} for a survey of the most recent methods in the field. 
 
             % \textbf{Lottery Ticket Hypothesis}: The sparsity of activations in neural networks is widely seen in practice. Frankle and Carbin suggested that a small subset of neurons are better primed to fit the dataset at initialisation time, and dubbed this the 'lottery ticket hypothesis'. Subsequent work has focused on algorithms for identifying such lottery tickets. 
-        \subsection{Summary of Contributions}
-            Our contributions are as follows 
-            \begin{itemize}
-                \item 
-                    Providing a framework to assess the robustness of a trained neural network in a more principled manner than checking accuracy or perturbations that may never naturally occur.
-                \item 
-                    Extracting distributions from trained networks to address the problem of out-of-distribution data in a principled manner 
-                \item 
-                    Developing a method for checking distances between datasets at deployment-time
-            \end{itemize}
     \section{Methods}
         % Shifts in distribution are situation when the distributions of the training and testing sets are not identical. In literature, the most common classification of these shifts are concept shift and covariate/data shift.
 
@@ -120,10 +122,18 @@
         
     % \section{Entropies in Between Classes}
         
-        \subsection{Class-Wise Frequencies of Significant Neuron-Weight Interactions}
+        \subsection{Class-Wise Frequencies of Significant Paths Interactions}
             The focus of the study was the interactions of neurons and weights together. Thus, instead of just looking at the final value of the neuron, we decided to look each circuit that extends across a single layer and corresponds to a single pair of neuron and weight. In this case, what we did is described below. 
 
-            The final layer of the neural network operates as follows. Given an activation vector $x \in \mathbb{R}^{n_{in} \times 1}$ and a weight matrix $W \in \mathbb{R}^{n_{out} \times n_{in}}$ 
+            The final layer of the neural network operates as follows. Given an activation vector $x \in \mathbb{R}^{n_{in} \times 1}$ and a weight matrix $W \in \mathbb{R}^{n_{out} \times n_{in}}$. The 3 interpretations we study here are
+            \begin{itemize}
+                \item 
+                    Fitting a bernoulli random variable to each path after binarising: This is discussed below. A significant downside is the correlations neurons firing together is lost
+                \item 
+                    Fitting a multivariate gaussian to the raw path values: This will be discussed in a later section. While this captures both path information and covariance, it may become computationally infeasible due to large memory requirements
+                \item 
+                    Fitting a multivariate gaussian to the neurons: This will be discussed in a later section. This loses path information for a more granular modelling of neuron activations. 
+            \end{itemize}
                 \[
                     \begin{bmatrix}
                         w_{1,1} & \dots & w_{1,n_{in}} \\
@@ -160,12 +170,25 @@
                         \vdots & \ddots & \vdots \\
                         w_{n_{out}, 1}x_{n_{in}} & \dots & w_{n_{out}, n_{in}}x_{n_{in}} 
                     \end{bmatrix}\]
-            To this, we concatenated the bias vector as an additional neuron, giving us a matrix in $\mathbb{R}^{n_{out} \times (n_{in} + 1)}$
+            To this, we concatenated the bias vector as an additional neuron, giving us a matrix in $\mathbb{R}^{n_{out} \times (n_{in} + 1)}$. The distribution fitting was done after flattening the matrix into a vector of dimension $\mathbb{R}^{1 \times (n_{out}(n_{in} + 1))}$. 
+            \[\begin{bmatrix}
+                    w_{1,1}x_1 \\
+                    \vdots \\
+                    w_{1,n_{in}}x_{n_{in}} \\
+                    \vdots \\
+                    w_{n_{out},1}x_{1} \\
+                    \vdots \\
+                    w_{n_{out}, n_{in}}x_{n_{in}} \\
+                    \vdots
+                    b_1 \\
+                    \vdots \\
+                    b_{n_{out}}
+                \end{bmatrix}\]
             The definition of significance used was 
             \[S(x_{ij}) = 1 \text{ if } |x_{ij}| > \frac{|\sum_j x_{ij}|}{n_{in}} \]
-            where $n_{in}$ is the number of input features, i.e. number of columns in the matrix. The justification behind this is the idea that if an activation has an above average contribution to the final activation, the neuron-weight interaction is significant.
+            where $n_{in}$ is the number of input features, i.e. number of columns in the matrix. The justification behind this is the idea that if an activation has an above average contribution to the final activation, the path is significant.
             As eariler, we hypothesise that the number of significant interactions between neurons and weights are sparse, and that the sparsity increases with depth. 
-        
+            
         \subsection{KL Divergence Between Classes}
             Building on the same experiment, we wanted to check both the entropies in between different classes over the activation distribution for the same layer. We also measured the same entropies at training and testing time, as well as an in and out of distribution dataset. The in-distribution dataset was the validation set for imagenet as used eariler, and the out of distribution dataset was the imagenet-r dataset created by Hendrycks et. al.\cite{hendrycks2021facesrobustnesscriticalanalysis}. This is a collection of stylised versions of the standard classes of imagenet such as caricatures. This dataset has 200 classes compared to the original 1000 from imagenet, and to ensure the comparison was meaningful we sampled 50 classes from the dataset uniformly at random and computed the pairwise KL divergences between pairs of classes from the imagenet validation set, between pairs of classes from the imagenet-r set and between the same classes from imagenet and imagenet-r. Along similar lines, we also measured the entropy of the distributions. Analagous to regression, the distance within the clusters (entropy) should decrease, while the distance between the clusters (KL divergence) should increase. The entropy is given by the formula
             \[H(X) = -\sum p(x)\log(p(x))\]
@@ -174,18 +197,18 @@
             This can be thought of as a measure of how well $P$ approximates $Q$. It is not a true metric, because it doesn't satisfy triangle inequality or symmetry. Our computations make a strong assumption of \textbf{independence} of the significance of activations, i.e. that any activation will be significant in it's own row is independent of the other events being significant. 
             An idea the framework pushes is probabilistic interpretation of class separation. To compare, we flatten the proportion matrices to vectors in $\mathbb{R}^{n_{in}\times n_{out}}$ and compute the euclidean distance between them, which is a geometric quantity. 
         
-        \subsection{Log Probabilities for OOD detection}
+        \subsection{Log Probabilities for Distribution Shift Detection}
             Given that we have a distribution over different datasets, a natural question to ask is if they register different behaviour for in-distribution and out-of-distribution data. For this, only the CIFAR10 dataset was used, with CIFAR10.1 \cite{recht2018cifar10classifiersgeneralizecifar10} providing a frame-of-reference dataset which was meant to be similar and TinyImagenet \cite{Le2015TinyIV} and SVHN \cite{37648} used as OOD datasets. Since separation between individual classes cannot be tracked because of label incoherence, the comparison is made across the distribution aggregated over the entire dataset. Alongside this, we measure 
             \begin{itemize}
                 \item 
                     The separation of datasets at an aggregate level
                 \item 
-                    The posterior probability of having observed an activation of an image $x$ given that it comes from a dataset $Y$, i.e. $p(f(x)| x \sim Y)$ across the different dataset choices $Y$. Y here is a multivariate bernoulli distribution. Separation of different datasets under this score would make this a good metric for out-of-distribution detection. 
+                    The posterior probability of having observed an activation of an image $x$ given that it comes from a dataset $Y$, i.e. $p(f(x)| x \sim Y)$ across the different dataset choices $Y$. Y here is a multivariate bernoulli distribution. Separation of different datasets under this score would make this a good metric for distribution shift detection. 
             \end{itemize}
-            Tiny Imagenet needs to have a mapping to CIFAR10 crafted by hand. The mapping decided by us can be found in Appendix A. 
+            The sampled classes from imagenet are quite semantically varied, containing classes from cellular telephone to labrador retriver. A full list is provided in Appendix D. Imagenet-R on the other hand, contains stylised versions of the same classes sampled from Imagenet such as caricatures. CIFAR10 too has some animal classes like frog and deer and some vehicle classes such as truck or automobile which are quite varied. Tiny Imagenet needs to have a mapping to CIFAR10 crafted by hand. The mapping decided by us can be found in Appendix A. On the other hand, SVHN comes from a completely different domain. It contains images of numberplates from houses all across the world, which are vastly different from natural images of animals or vehicles. 
         
         \subsection{Modelling Activations using a Multivariate Gaussian}
-            The matrix of neuron-weight products for each image can flattened
+            The matrix of paths for each image can flattened
             \[\begin{bmatrix}
                 w_{1,1}x_1  & \dots & w_{1,n_{in}}x_1 \\
                 \vdots & \ddots & \vdots \\
@@ -195,13 +218,25 @@
             \begin{bmatrix}
                 w_{1,1}x_1 \\
                 \vdots \\
+                w_{1,n_{in}}x_{n_{in}} \\
+                \vdots \\
+                w_{n_{out},1}x_{1} \\
+                \vdots \\
                 w_{n_{out}, n_{in}}x_{n_{in}} \\
-            \end{bmatrix}
+            \end{bmatrix} = X
             \]
             The following estimators can be used for the mean and variance of the distribution. Note that this assumes the distribution is gaussian, because it is being modelled entirely using just the mean and variance. Given images $x_1, \dots, x_n$ for a class $c$, it's mean and covariance can be estimated as
             \[\vec{\mu_c} = \frac{1}{n}\sum_{i=1}^n \vec{x}_i\]
             \[\Sigma_c = \frac{1}{n}\sum_{i=1}^n (\vec{x}_i - \vec{\mu_c})(\vec{x}_i - \vec{\mu_c})^T\]
             \[d_{\text{mahalanobis}}(c_1, c_2) = \sqrt{((\vec{\mu_{c_1}} - \vec{\mu_{c_2}})^T\Sigma_{c_1}(\vec{\mu_{c_1}} -\vec{\mu_{c_2}}))}\]
+            This was done at the path level as explained above, as well as the neuron level. The justification for doing it at the neuron level is that with regards to a fixed network, looking at the paths may not always be necessary and is much more resource intensive. To specify, the mean and variances are estimated in the same way with the only change being
+            \[X = 
+            \begin{bmatrix}
+                x_1 \\
+                \vdots \\
+                x_{n_{in}} \\
+            \end{bmatrix}
+            \]
             To avoid issues with numerical stability, a low rank approximation of the covariance matrix was used, with small imaginary components being ignored. In addition to the flattened products of neurons and weights, this is also applied to the neurons themselves. 
         
         \subsection{Memorisation and Significance}
@@ -310,7 +345,7 @@
                         \includegraphics[width=\textwidth]{new/alexnet_r/activation_proportions/n02088466.png}
                     \end{minipage}
                     
-                    \caption{Frequencies of the significant neuron-weight activation proportions for the networks: untrained on imagenet, trained on imagenet, untrained on imagenet-r and  trained on imagenet-r from top to bottom}
+                    \caption{Frequencies of the significant paths activation proportions for the networks: untrained on imagenet, trained on imagenet, untrained on imagenet-r and  trained on imagenet-r from top to bottom}
                     \label{fig:frequency_neuron_weight1}
                 \end{figure}
                 
@@ -552,7 +587,7 @@
                 % \end{figure}
             
             \subsubsection{Intra-Dataset Separation: Training, Random Labels and Overtraining on CIFAR10}
-                The KL divergence heatmaps for the CIFAR10 networks are in Figure \ref{fig:kl_divergence_small_alexnet}. The entropy is larger than the separation at initialisation, but training on random labels greatly increases the entropy of the distribution with a small difference in the inter class separation. For the best and overtrained networks, we see almost identical patterns of separation between classes, with the magnitude being smaller for the network. The decrease in relative separation might suggest that the network is 'forgetting' the relationships between classes and making the distributions more similar. 
+                The KL divergence heatmaps for the CIFAR10 networks are in Figures \ref{fig:kl_divergence_small_alexnet}, \ref{fig:distance_small_alexnet}, \ref{fig:kl_divergence_small_alexnet_second_last}, \ref{fig:distance_small_alexnet_second_last}. The entropy is larger than the separation at initialisation, but training on random labels greatly increases the entropy of the distribution with a small difference in the inter class separation. For the best and overtrained networks, we see almost identical patterns of separation between classes, with the magnitude being smaller for the network. The decrease in relative separation might suggest that the network is 'forgetting' the relationships between classes and making the distributions more similar. A similar pattern emerges at the second-last layer, with the exception being that the entropy of the distributions does not decrease, but increases. The networks seem to need more chaotic distributions to adequately represent the different class distributions.
                 
                 % Last Layer
                 \begin{figure}[H]
@@ -580,7 +615,7 @@
                         \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best/out_matrices/small_alexnet_kl_matrix.png}
                         \subcaption{Best}
                     \end{minipage}
-                    \caption{KL divergence heatmaps for the modified Alexnet models on CIFAR10}
+                    \caption{KL divergence heatmaps at the last layer for the modified Alexnet models on CIFAR10}
                     \label{fig:kl_divergence_small_alexnet}
                 \end{figure}
                 
@@ -610,7 +645,7 @@
                         \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best/out_matrices/small_alexnet_distance_matrix.png}
                         \subcaption{Best}
                     \end{minipage}
-                    \caption{Distance divergence heatmaps for the modified Alexnet models on CIFAR10}
+                    \caption{Distance heatmaps at the last layer for the modified Alexnet models on CIFAR10}
                     \label{fig:distance_small_alexnet}
                 \end{figure}
             
@@ -641,7 +676,7 @@
                         \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best_second_last/out_matrices/small_alexnet_kl_matrix.png}
                         \subcaption{Best}
                     \end{minipage}
-                    \caption{KL divergence heatmaps for the modified Alexnet models on CIFAR10}
+                    \caption{KL divergence heatmaps at the second last layer for the modified Alexnet models on CIFAR10}
                     \label{fig:kl_divergence_small_alexnet_second_last}
                 \end{figure}
                 
@@ -671,26 +706,25 @@
                         \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best_second_last/out_matrices/small_alexnet_distance_matrix.png}
                         \subcaption{Best}
                     \end{minipage}
-                    \caption{Distance divergence heatmaps for the modified Alexnet models on CIFAR10}
+                    \caption{Distance heatmaps at the second last layer for the modified Alexnet models on CIFAR10}
                     \label{fig:distance_small_alexnet_second_last}
                 \end{figure}
 
             \subsubsection{Inter-Dataset Separation: CIFAR10, TinyImagenet, SVHN, CIFAR10.1}
-                The goal of this is to quantify the shift in distribution across different validation sets. We measured various distances between the aggregate distributions and got the following results 
+                The goal of this is to quantify the shift in distribution across different validation sets. We measured various distances between the aggregate distributions and the results are presented in Figure \ref{fig:inter-dataset-bernoulli}. Here we can see that the training dataset for CIFAR10 and the fresh test set for CIFAR10 are not the two closest datasets to the validation set of CIFAR10 as we might expect. This suggests that the network's internal concepts do not have the same semantic distances that we do. Additionally, this also suggests that distribution shifts may not be detectable at an aggregate level, because the information loss when aggregating across different classes is too large.
                 
                 \begin{figure}[H]
                     \centering
                     \begin{minipage}{0.45\textwidth}
-                        \centering
                         \includegraphics[width=\textwidth]{new/consolidated_plots/kl_div/ref_to_other_overall.png}
-                        \subcaption{KL Divergence of different datasets from CIFAR10}
+                        \subcaption{KL Divergence}
                     \end{minipage}
-                    
                     \begin{minipage}{0.45\textwidth}
-                        \centering
                         \includegraphics[width=\textwidth]{new/consolidated_plots/inter_dist/ref_to_other_overall.png}
-                        \subcaption{Intersection distance of different datasets from CIFAR10}
+                        \subcaption{Intersection distance}
                     \end{minipage}
+                    \caption{Distances of different datasets from CIFAR10}
+                    \label{fig:inter-dataset-bernoulli}
                 \end{figure}
                 
             \subsubsection{Log Probabilities Under Different Prior Distributions}
@@ -834,7 +868,7 @@
                 % \end{figure}                
                 
             \subsubsection{Inter-Dataset Separation: CIFAR10, TinyImagenet, SVHN, CIFAR10.1}
-                Comparing the distances that different datasets have from cifar10, we do not see any discernible pattern. The training dataset and cifar 10.1 are further away from the validation dataset than SVHN, which is out of distribution. Further, the chosen classes from tiny imagenet are semantically more similar to cifar10 than svhn, yet the distance that has from the dataset is much higher than svhn. These results need additional investigation, possibly at the embedding layer.
+                Comparing the distances that different datasets have from cifar10, we do not see any discernible pattern. The training dataset and cifar 10.1 are further away from the validation dataset than SVHN, which is out of distribution. Further, the chosen classes from tiny imagenet are semantically more similar to cifar10 than SVHN, yet the distance that has from the dataset is much higher than SVHN. These results need additional investigation, possibly at the embedding layer. Further, it also solidifies the lack of semantic encoding of the classes in the network.
                 \begin{figure}[H]
                     \centering
                     \includegraphics[width=\textwidth]{new/consolidated_plots/mahalanobis_dist/ref_to_other_overall.png}
@@ -868,15 +902,15 @@
                         \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best/probability_results/small_alexnet_mahalanobis_matrix_neurons.png}
                         \subcaption{Best}
                     \end{minipage}
-                    \caption{Mahanlanobis Distance heatmaps for the modified Alexnet models on CIFAR10}
+                    \caption{Mahanlanobis Distance heatmaps for the neurons of the last layer of the modified Alexnet models on CIFAR10}
                     \label{fig:mahalanobis_small_alexnet_neurons}
                 \end{figure}                
                 
-                These results are almost identical to the neuron-weights, and the conclusions remain the same. The notable exception is the effect of overtraining, where the separation between neurons for different classes becomes extremely high between certain pairs of classes. This suggests that the distribution over neurons is more sensitive to overtraining as opposed to inspecting the neuron-weight products.
+                These results are almost identical to the paths, and the conclusions remain the same. The notable exception is the effect of overtraining, where the separation between neurons for different classes becomes extremely high between certain pairs of classes. This suggests that the distribution over neurons is more sensitive to overtraining as opposed to inspecting the path.
 
             \subsubsection{Log Probabilities Under Different Prior Distributions for Circuits}
-                Below are curves for the different log probabilities of the circuit values when modelled as gaussians. The interesting point to note here is the drastically different shape of CIFAR10.1 compared to CIFAR10. This suggests that the distributions in question are quite data hungry and need a large number of samples before they converge. Once again, a distribution shift to a different task (Optical Character Recognition for SVHN) is clearly seen, with the log probabilties having very little overlap. However, both CIFAR10 and TinyImagenet are natural image datasets, do they are not as easy to tease apart at the final layer. We were unable to probe past the final layer in the gaussian setting due to computational constraints, but this requires further investigation.
-                \begin{figure}
+                Figure \ref{fig:last_layer_circuits} are curves for the different log probabilities of the circuit values when modelled as gaussians. The interesting point to note here is the drastically different shape of CIFAR10.1 compared to CIFAR10. This suggests that the distributions in question are quite data hungry and need a large number of samples before they converge. Once again, a distribution shift to a different task (Optical Character Recognition for SVHN) is clearly seen, with the log probabilties having very little overlap. However, both CIFAR10 and TinyImagenet are natural image datasets, do they are not as easy to tease apart at the final layer. We were unable to probe past the final layer in the gaussian setting due to computational constraints, but this requires further investigation.
+                \begin{figure}[H]
                     \centering
                     \begin{minipage}{0.45\textwidth}
                         \centering
@@ -889,8 +923,11 @@
                         \subcaption{Log Probabilities of test activations on training distributions}
                     \end{minipage}
                     \caption{Last Layer Circuits}
+                    \label{fig:last_layer_circuits}
                 \end{figure}
             \subsubsection{Log Probabilities Under Different Prior Distributions for Neurons}
+            Below are curves for the different log probabilities of the neuron values when modelled as gaussians. The similarity to the circuit case is interesting, as is the crucial difference for the CIFAR10.1 prior. This suggests that distributions induced by the neurons are much more stable in terms of the number of samples needed than those induced on the circuits by the trained networks. 
+                
             \begin{figure}
                 \centering
                 \begin{minipage}{0.45\textwidth}
@@ -936,19 +973,19 @@
             To test this hypothesis, we compared the norms of adversarially attacked inputs to clean inputs and the results are attached below. There is a clear cut separation in between the norms of both datasets, which lends credence to the idea that adversarially attacked inputs push the embedding closer to the null space of the liner layers. Note that this is with a much weaker PGD attack (10 iterations), and the shift is extremely noticable. 
             \begin{figure}[H]
                 \centering
-                \begin{minipage}{0.32\textwidth}
+                \begin{minipage}{\textwidth}
                     \centering
                     \includegraphics[width=\textwidth]{new/pgd_small_alexnet/norm_comparison_small_alexnet_10_iter_layer_index_-1.png}
                     \subcaption{Last Layer}
                 \end{minipage}%
                 \hfill
-                \begin{minipage}{0.32\textwidth}
+                \begin{minipage}{\textwidth}
                     \centering
                     \includegraphics[width=\textwidth]{new/pgd_small_alexnet/norm_comparison_small_alexnet_10_iter_layer_index_-2.png}
                     \subcaption{Second Last Layer}
                 \end{minipage}%
                 \hfill
-                \begin{minipage}{0.32\textwidth}
+                \begin{minipage}{\textwidth}
                     \centering
                     \includegraphics[width=\textwidth]{new/pgd_small_alexnet/norm_comparison_small_alexnet_10_iter_layer_index_-3.png}
                     \subcaption{Third Last Layer}
@@ -1030,4 +1067,65 @@
     \section{PGD Attack Details}
         The Projected Gradient Descent attacks were carried out in 50 iterations, with a step size of 0.001 and a radius of 0.03. The PCA was thresholded until it explained 95\% of the variance from the activations. 
 
+    \section{Imagenet Sampled Class List}
+        \begin{longtable}{@{}ll@{}} % Using longtable for potentially long lists, left-aligned columns
+            \toprule % Top rule
+            \textbf{Item Name} & \textbf{Code} \\
+            \midrule % Rule below header
+            \endhead % Marks the end of the table header (repeated on new pages)
+            \bottomrule % Bottom rule at the very end of the table
+            \endfoot % Marks the end of the table footer
+            
+            leopard & n02128385 \\
+            canoe & n02951358 \\
+            Rottweiler & n02106550 \\
+            chow & n02112137 \\
+            broom & n02906734 \\
+            cheeseburger & n07697313 \\
+            cellular telephone & n02992529 \\
+            goldfish & n01443537 \\
+            volcano & n09472597 \\
+            West Highland white terrier & n02098286 \\
+            lab coat & n03630383 \\
+            hyena & n02117135 \\
+            ice cream & n07614500 \\
+            toy poodle & n02113624 \\
+            Pomeranian & n02112018 \\
+            strawberry & n07745940 \\
+            black swan & n01860187 \\
+            ambulance & n02701002 \\
+            cockroach & n02233338 \\
+            Chihuahua & n02085620 \\
+            Labrador retriever & n02099712 \\
+            pug & n02110958 \\
+            tractor & n04465501 \\
+            wood rabbit & n02325366 \\
+            stingray & n01498041 \\
+            bloodhound & n02088466 \\
+            sax & n04141076 \\
+            pizza & n07873807 \\
+            bee & n02206856 \\
+            whippet & n02091134 \\
+            king penguin & n02056570 \\
+            pelican & n02051845 \\
+            cucumber & n07718472 \\
+            burrito & n07880968 \\
+            common iguana & n01677366 \\
+            space shuttle & n04266014 \\
+            stole & n04325704 \\
+            tree frog & n01644373 \\
+            trombone & n04487394 \\
+            goose & n01855672 \\
+            joystick & n03602883 \\
+            dragonfly & n02268443 \\
+            jellyfish & n01910747 \\
+            electric guitar & n03272010 \\
+            gibbon & n02483362 \\
+            violin & n04536866 \\
+            monarch & n02279972 \\
+            Shih-Tzu & n02086240 \\
+            meerkat & n02138441 \\
+            \caption{List of Items and Codes} % Optional caption
+            \label{tab:itemcodes} % Optional label for referencing
+            \end{longtable}        
 \end{document}
