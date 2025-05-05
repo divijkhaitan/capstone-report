@@ -40,6 +40,7 @@
                 \subcaption{Best Fit}
                 % \label{fig:image2}
             \end{minipage}
+            \hfill
             \begin{minipage}{0.3\textwidth}
                 \centering
                 \includegraphics[width=\linewidth]{overfit.png}
@@ -70,13 +71,13 @@
         \begin{itemize}
             \setlength\itemsep{1em}
             \item 
-                Alexnet : \#(parameters) $\approx \; 4 \times 10^5$
+                Alexnet : \#(parameters) $\approx \; 65$ million
             \item 
                 Achieves about $60\%$ accuracy on Imagenet 1K with $\approx$ 1.3 million images
             \item 
-                ResNet-50 ($2.5 \times 10^7$) parameters, $76\%$ accuracy
+                ResNet-50 ($25$) million parameters, $76\%$ accuracy
             \item 
-                Is this network overfitting?
+                Are these networks overfitting?
         \end{itemize}
     \end{frame}
 
@@ -113,9 +114,9 @@
             \item 
                 Interpretability: \cite{stano2020explainingpredictionsdeepneural} fits a gaussian mixture, binarises and uses the hamming distance to support predictions, \cite{bauerle2022neuralactivationpatternsnaps} is a tool to visualise activation patterns as they relate to features
             \item 
-                OOD detection: Using specific patterns of activation and associating them with each class, \cite{lee2018simpleunifiedframeworkdetecting} fits a multivariate gaussian to each class in the embedding space and the mahanlanobis distance from an activation pattern to support decisions
+                OOD detection: \cite{lee2018simpleunifiedframeworkdetecting} fits a multivariate gaussian to the embeddings for each class and uses the mahalanobis distance as a certainty score
             \item 
-                Idea of fitting distributions to activations for uncertainty quantification is common
+                Mechanistic Interpretability: \cite{olah2017feature,lindsey2025biology} reverse engineering a neural network by attributing semantic concepts to parts of a trained network
         \end{itemize}
     \end{frame}
 
@@ -123,13 +124,24 @@
         \begin{itemize}
             \setlength\itemsep{1em}
             \item 
-                Analyse the activations at a finer granularity
+                Analysing the robustness of neural networks in terms of circuits
             \item 
-                Introduce a notion of significance into neuron activations
+                Distributions over classes provide a principled means of detecting distribution shifts
             \item 
-                Distributions over classes provide better characterisation of OOD data than manifold interpretation
+                Measure for robustness at deployment time for a distribution shift on a single task
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Circuits and Superposition}
+        \begin{itemize}
             \item 
-                Measure for robustness 
+                First studied in \cite{olah2020zoom}, which argues that alongside the directions of the feature space the interactions between them are important
+            \item 
+                Find that there are circuit structures, particularly in image detections where earlier layer detect lower level features like edges and later layers detect complex features like shapes and faces
+            \item 
+                Concepts encoded by monosemantic neurons in earlier layers may be encoded by polysemantic neurons in subsequent 
+            \item 
+                Coined the term superposition which is the distribution multiple exclusive featues across the same set of directions
         \end{itemize}
     \end{frame}
 
@@ -156,7 +168,19 @@
         \]
     \end{frame}
 
-    \begin{frame}{Neuron-Weight Interactions}
+    \begin{frame}{Granularities to be Studied}
+        We study the internals of the neural network at 3 different granularities
+        \begin{itemize}
+            \item 
+                Circuits/Neuron-Weight Interactions as bernoulli trials: Stable fits in exchange for losing higher moments of distributions
+            \item 
+                Circuits/Neuron-Weight Interactions as multivariate gaussians: Computationally very intensive to model, unstable fits but captures second moment
+            \item 
+                Neurons: Captures second moment of the distribution over activations but lose out on path information, computationally more tractable than 
+        \end{itemize}
+    \end{frame}
+    
+    \begin{frame}{Modelling Circuits/Neuron-Weight Interactions}
         To study every term in each summation individually, a vector of 1s needs to be factored out.
         \[
             W\diag(x_1, \dots, x_n)    
@@ -169,24 +193,52 @@
         \]
     \end{frame}
     
-    \begin{frame}{Significance of Neuron Weight Interactions}
+    \begin{frame}{Modelling Circuits/Neuron-Weight Interactions: Bernoulli}
         An interaction is considered significant if it is large relative to the magnitude of the neuron value, corrected for the input dimension. Formally 
         \[S_{ij} = 1 \text{ if } |x_{ij}| > \frac{|\sum_j x_{ij}|}{n_{in}} \]
-
+        These are flattened into a single vector for which the success proportion for each coordinate $\hat{p}$ is estimated using the MLE $\hat{p}_{i, j} = \frac{1}{k}\sum {S_{i, j}^l}$, where $l$ indexes over the $k$ datapoints
+        \[S = 
+        \begin{bmatrix}
+            S_{1,1} \\
+            \vdots \\
+            S_{1,n_{in}} \\
+            \vdots \\
+            S_{n_{out},n_{in}} \\
+        \end{bmatrix} \rightarrow 
+        \begin{bmatrix}
+            \hat{p}_{1,1} \\
+            \vdots \\
+            \hat{p}_{1,n_{in}} \\
+            \vdots \\
+            \hat{p}_{n_{out},n_{in}} \\
+        \end{bmatrix} 
+        \]
     \end{frame}
 
-    \begin{frame}{Activation Distributions}
-        \begin{itemize}
-            \setlength\itemsep{1em}
-            \item 
-                Modelled binary on-off values for each interaction in the linear layers as independent bernoulli random variables
-            \item 
-                Measured KL divergence and entropy for distributions
-            \item 
-                Can be seen as analogues to the cluster radius and distances
-            \item 
-                Our current methodology over-estimates the separation between classes
-        \end{itemize}
+    \begin{frame}{Modelling Circuit Activations: Multivariate Gaussian}
+        The matrix itself can also be flattened 
+        \[X = 
+        \begin{bmatrix}
+            w_{1,1}x_1 \\
+            \vdots \\
+            w_{1,n_{in}}x_{n_{in}} \\
+            \vdots \\
+            w_{n_{out},n_{in}}x_{n_{in}} \\
+        \end{bmatrix}
+        \]
+        From this we can estimate the mean and variance using the MLEs $\hat{\mu} = \frac{1}{k} \sum X^l$ and $\hat{\Sigma} = \frac{1}{k} \sum (X^l - \hat{\mu})(X^l - \hat{\mu})^T$
+    \end{frame}
+
+    \begin{frame}{Modelling Neurons: Multivariate Gaussian}
+        The neurons can be written as  
+        \[X = 
+        \begin{bmatrix}
+            x_1 \\
+            \vdots \\
+            x_{n_{in}} \\
+        \end{bmatrix}
+        \]
+        Using the same MLEs as before, a multivariate gaussian can be fit to them as well
     \end{frame}
 
     \begin{frame}{Sparsity of Neuron Activations}
@@ -222,6 +274,46 @@
         \includegraphics[width=\textwidth]{histogram_distance.png}
     \end{frame}
 
+    \begin{frame}{Mahalanobis Distance}
+        \begin{itemize}
+            \item 
+                This is a notion of distance between a point and a distribution
+            \item 
+                Takes into account the variance structure of a distribution
+            \item 
+                For a multivariate gaussian distribution, it has the following closed form given a distribution $\mathcal{D}$ and a point $c$
+                \[d_{\text{mahalanobis}}(\mathcal{D}, c) = \sqrt{((\vec{\mu_{\mathcal{D}}} - \vec{c})^T\Sigma_{\mathcal{D}}(\vec{\mu_\mathcal{D}} -\vec{c}))}\]
+            \item 
+                To find this between 2 distributions, we computed the distance of the mean of a target distribution from a base distribution
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Activation Distributions}
+        \begin{itemize}
+            \setlength\itemsep{1em}
+            \item 
+                Measured KL divergence and entropy for distributions
+            \item 
+                Can be seen as analogues to the cluster radius and distances
+            \item 
+                Our current methodology over-estimates the separation between classes
+            \item 
+                Large KL divergence $\rightarrow$ separated paths/neurons $\rightarrow$ robustness
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Measuring Distribution Shifts: Dataset vs Class}
+        \begin{itemize}
+            \item 
+                Now we have a notion for a distribution, which can be extended from a class to a dataset
+            \item 
+                Deployment time: ensure classes during deployment are similar to the training/validation
+            \item 
+                At a dataset level: Quantify how large of a shift is one dataset from another
+        \end{itemize}
+    \end{frame}
+
+    
     % \begin{frame}{Detecting Adversarial Attacks}
     %     \begin{itemize}
     % \setlength\itemsep{1em}
@@ -402,7 +494,7 @@
             \end{minipage}
             \hfill
             
-            \caption{Activation Proportions from the class Airplane on the last and second last layers on different versions of the Modified AlexNet}
+            \caption{Distances between circuit distributions at the Last Layer}
             \label{fig:small_alexnet_kl_matrix}
         \end{figure}
     \end{frame}
@@ -438,7 +530,7 @@
             \end{minipage}
             \hfill
             
-            \caption{Activation Proportions from the class Airplane on the last and second last layers on different versions of the Modified AlexNet}
+            \caption{Distances between circuit distributions at the Second Last Layer}
             \label{fig:small_alexnet_kl_matrix_second_last}
         \end{figure}
     \end{frame}
@@ -704,7 +796,7 @@
             \end{minipage}
             \hfill
             
-            \caption{Activation Proportions from the class Airplane on the last and second last layers on different versions of the Modified AlexNet}
+            \caption{Histogram distances between Last Layer distributions}
             \label{fig:small_alexnet_intersection_matrix}
         \end{figure}
     \end{frame}
@@ -740,7 +832,7 @@
             \end{minipage}
             \hfill
             
-            \caption{Activation Proportions from the class Airplane on the last and second last layers on different versions of the Modified AlexNet}
+            \caption{Histogram distances between Second Last Layer distributions}
             \label{fig:small_alexnet_intersection_matrix_second_last}
         \end{figure}
     \end{frame}
@@ -791,12 +883,11 @@
                 % \label{fig:image1}
             \end{minipage}
             \hfill
-            
             \caption{KL Divergence Heatmaps on imagenet for Alexnet}
             \label{fig:alexnet_imgr_histogram_distance}
         \end{figure}
     \end{frame}
-    
+
     \begin{frame}{Results: Distances between distribution histograms - imagenet-r}
         % Pairwise heatmaps for the last layer 
         \begin{figure}[H]
@@ -849,6 +940,208 @@
         \end{figure}
     \end{frame}
 
+    \begin{frame}{Gaussian Fitting: Circuits}
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_untrained_cifar10/probability_results/small_alexnet_mahalanobis_matrix.png}
+                \subcaption{Untrained}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_random_labels/probability_results/small_alexnet_mahalanobis_matrix.png}
+                \subcaption{Random Labels}
+                % \label{fig:image2}
+            \end{minipage}
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_250_epoch/probability_results/small_alexnet_mahalanobis_matrix.png}
+                \subcaption{Overtrained}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_best/probability_results/small_alexnet_mahalanobis_matrix.png}
+                \subcaption{Best}
+                % \label{fig:image2}
+            \end{minipage}
+            \hfill
+            \caption{Mahalanobis Distance between pairs of Gaussians at the circuit level}
+            \label{fig:circuit_gaussian}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{Gaussian Fitting: Neurons}
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_untrained_cifar10/probability_results/small_alexnet_mahalanobis_matrix_neurons.png}
+                \subcaption{Untrained}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_random_labels/probability_results/small_alexnet_mahalanobis_matrix_neurons.png}
+                \subcaption{Random Labels}
+                % \label{fig:image2}
+            \end{minipage}
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_250_epoch/probability_results/small_alexnet_mahalanobis_matrix_neurons.png}
+                \subcaption{Overtrained}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.24\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_best/probability_results/small_alexnet_mahalanobis_matrix_neurons.png}
+                \subcaption{Best}
+                % \label{fig:image2}
+            \end{minipage}
+            \hfill
+            \caption{Mahalanobis Distance between pairs of Gaussians at the circuit level}
+            \label{fig:neuron_gaussian}
+        \end{figure}
+    \end{frame}
+    
+    \begin{frame}{Results: Gaussian Fitting}
+        \begin{itemize}
+            \item 
+                Results are almost identical to relative separation in the bernoulli case
+            \item 
+                Neuron distributions degenerate much more than circuit distributions
+            \item 
+                Not clear if this is because of additional sensitivity to overtraining or distribution instability
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Log Probabilities Under Different Prior Distributions: Bernoulli}
+        \begin{figure}
+            \centering
+            \begin{minipage}{0.45\textwidth}
+                \centering
+                \includegraphics[width=0.5\textwidth]{new/train_test_kde_plots/log_prob_analysis_train_test_cifar10_10.1_svhn_tinyimagenet.png}                        
+                \subcaption{Log Probabilities of test activations on training distributions}
+            \end{minipage}
+            \begin{minipage}{0.45\textwidth}
+                \centering
+                \includegraphics[width=0.5\textwidth]{new/test_kde_plots/log_prob_analysis_cifar10_10.1_svhn_tinyimagenet.png}                        
+                \subcaption{Log Probabilities test activations on test distributions}
+            \end{minipage}
+            \caption{Last Layer Circuits}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{Log Probabilities Under Different Prior Distributions: Bernoulli}
+        \begin{figure}
+            \centering
+            \begin{minipage}{0.45\textwidth}
+                \centering
+                \includegraphics[width=0.5\textwidth]{new/train_test_kde_plots/log_prob_analysis_train_test_cifar10_10.1_svhn_tinyimagenet_second.png}                        
+                \subcaption{Log Probabilities of test activations on training distributions}
+            \end{minipage}
+            \begin{minipage}{0.45\textwidth}
+                \centering
+                \includegraphics[width=0.5\textwidth]{new/test_kde_plots/log_prob_analysis_cifar10_10.1_svhn_tinyimagenet_second.png}                        
+                \subcaption{Log Probabilities of test activations on test distributions}
+            \end{minipage}
+            \caption{Second Last Layer Circuits}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{Log Probabilities Under Different Prior Distributions: Bernoulli}
+        \begin{figure}
+            \centering
+            \begin{minipage}{0.45\textwidth}
+                \centering
+                \includegraphics[width=0.5\textwidth]{new/train_test_kde_plots/log_prob_analysis_train_test_cifar10_10.1_svhn_tinyimagenet_third.png}                        
+                \subcaption{Log Probabilities of test activations on training distributions}
+            \end{minipage}
+            \begin{minipage}{0.45\textwidth}
+                \centering
+                \includegraphics[width=0.5\textwidth]{new/test_kde_plots/log_prob_analysis_cifar10_10.1_svhn_tinyimagenet_third.png}                        
+                \subcaption{Log Probabilities test activations on test distributions}
+            \end{minipage}
+            \caption{Third Last Layer Circuits}
+        \end{figure}
+    \end{frame}
+    
+    \begin{frame}{Log Probabilities Under Adversarial Attacks: Bernoulli}
+        \begin{figure}
+            \centering
+            \begin{minipage}{0.33\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{new/adv/log_prob_analysis_cifar10_10.1_svhn_tinyimagenet_adv.png}                        
+                \subcaption{Last Layer}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.33\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{new/adv/log_prob_analysis_cifar10_10.1_svhn_tinyimagenet_adv_second.png}                        
+                \subcaption{Second Last Layer}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.33\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{new/adv/log_prob_analysis_cifar10_10.1_svhn_tinyimagenet_adv_third.png}                        
+                \subcaption{Third Last Layer}
+            \end{minipage}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{Results: Bernoulli Log Probabilities}
+        \begin{itemize}
+            \item 
+                Separation between ID and OOD is low at the last layer but gradually increases further up the network
+            \item 
+                Similar pattern for adversarial vs. clean examples
+            \item 
+                Is the network forcing everything into a single subspace?
+            \item 
+                This should show up as a drop in norm
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Effect of Adversarial Attack on Embedding Norms}
+        \begin{figure}
+            \centering
+            \begin{minipage}{0.9\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{new/pgd_small_alexnet/norm_comparison_small_alexnet_10_iter_layer_index_-1.png}                        
+                \subcaption{Last Layer}
+            \end{minipage}
+            
+            \begin{minipage}{0.9\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{new/pgd_small_alexnet/norm_comparison_small_alexnet_10_iter_layer_index_-2.png}                        
+                \subcaption{Second Last Layer}
+            \end{minipage}
+            
+            \begin{minipage}{0.9\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{new/pgd_small_alexnet/norm_comparison_small_alexnet_10_iter_layer_index_-3.png}                        
+                \subcaption{Third Last Layer}
+            \end{minipage}
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{Results: Norm Comparison}
+        \begin{itemize}
+            \item 
+                Adversarial examples show a much smaller embedding norm than clean images
+            \item 
+                However, the same is not true for OOD data
+            \item 
+                Subspace restriction interpretation might have merit, but needs further investigation 
+        \end{itemize}
+    \end{frame}
+
     \begin{frame}{Results: Dimensions of Manifolds on CIFAR10}
         \begin{figure}[H]
             \centering
@@ -876,6 +1169,73 @@
             \caption{Manifold Dimension Overlap Heatmaps}
             \label{fig:pca_overlap_heatmaps}
         \end{figure}
+    \end{frame}
+
+    \begin{frame}{Distances Between Datasets: KL Divergence Between Bernoulli Circuits}
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{0.45\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/consolidated_plots/kl_div/ref_to_other_class_9.png}
+                \subcaption{Random Labels}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.45\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/consolidated_plots/kl_div/ref_to_other_class_2.png}
+                \subcaption{Overtrained}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.45\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/consolidated_plots/kl_div/ref_to_other_overall.png}
+                \subcaption{Best}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{Distances Between Datasets: Mahalanobis Distance Between Gaussian Circuits}
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{0.45\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/consolidated_plots/mahalanobis_dist/ref_to_other_class_9.png}
+                \subcaption{Random Labels}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.45\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/consolidated_plots/mahalanobis_dist/ref_to_other_class_2.png}
+                \subcaption{Overtrained}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.45\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/consolidated_plots/mahalanobis_dist/ref_to_other_overall.png}
+                \subcaption{Best}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+        \end{figure}
+    \end{frame}
+
+    \begin{frame}{Results}
+        \begin{itemize}
+            \item 
+                Distance Distribution does not seem to have much consistency
+            \item 
+                Semantics captured by the network are not the same as we understand
+            \item 
+                Separation at an aggregate level may not be feasible
+            \item 
+                Similar mean and different variance may result in very different distributions being close
+        \end{itemize}
     \end{frame}
 
     \begin{frame}{Dimensionality of Manifolds}
@@ -906,11 +1266,13 @@
         \begin{itemize}
             \setlength\itemsep{1em}
             \item 
-                Sample complexity of attaining a KL Divergence of $\epsilon$
+                More extensive benchmarking in terms of datasets and models
             \item 
-                Measuring data regularity/complexity based on the KL divergence
+                Measuring a distribution shift in the same domain at a class-wise level
             \item 
-                Tightening the esimate by making a modification/finding an under-estimator
+                Analysing the norm changes under different adversarial attcks 
+            \item 
+                Relationship between overparameterisation and detection of distribution shift
         \end{itemize}
     \end{frame}
 
