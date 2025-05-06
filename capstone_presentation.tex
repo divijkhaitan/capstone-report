@@ -2,19 +2,30 @@
 \usepackage{graphicx} % Required for inserting images
 \usepackage{float}
 \usepackage[T1]{fontenc}
-\title{Analysing the Robustness of Deep Neural Networks}
+\title{A new Framework for Analysing the Robustness of Deep Neural Networks}
 \author{Divij Khaitan}
 \date{\today}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{subcaption}
 \usepackage[backend=biber]{biblatex}
+
+\addtobeamertemplate{navigation symbols}{}{%
+    \usebeamerfont{footline}%
+    \usebeamercolor[fg]{footline}%
+    \hspace{1em}%
+    \insertframenumber/\inserttotalframenumber
+}
+
 \addbibresource{references.bib}
 
 \DeclareMathOperator{\diag}{diag}
 \DeclareMathOperator{\softmax}{softmax}
 
 \begin{document}
+    \expandafter\def\expandafter\insertshorttitle\expandafter{%
+    \insertshorttitle\hfill%
+    \insertframenumber\,/\,\inserttotalframenumber}
     \begin{frame}
         \maketitle
     \end{frame}
@@ -24,6 +35,56 @@
     % Image credits: Wikipedia
     % \end{frame}
     
+    \begin{frame}{Evaluating Neural Networks}
+        \begin{itemize}
+            \setlength{\itemsep}{2em}
+            \item 
+                Deep Learning Models are usually trained and evaluated on a single dataset
+            \item 
+                Accuracy and related metrics only defined on a single dataset, no claims made about correctness of an output
+            \item 
+                Handling Changes to input data?
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Shifts in Data Distributions: Examples}
+        \begin{itemize}
+            \setlength{\itemsep}{2em}
+            \item 
+                Bank Fraud: Training on data from rural areas and applying it to urban areas
+            \item 
+                Medical Imaging: Cancer classification model for European or Middle Eastern populations used in subcontinental hosptials
+            \item 
+                Autonomus Vehicles: Navigating mountain terrain after training for cities and paved roads
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Similarity of Data}
+        \begin{itemize}
+            \setlength{\itemsep}{2em}
+            \item 
+                In all of the above applications, neither is the universal set clear nor the probability distribution
+            \item 
+                Metrics in a high dimensional space are not meaningful assuming the manifold hypothesis
+            \item 
+                Distributions/Metrics in a denoised embedding space may be better to focus on
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Manifold Hypothesis}
+        \includegraphics[width=\textwidth]{manifold.png}
+        \begin{itemize}
+            \setlength{\itemsep}{2em}
+            \setlength\itemsep{1em}
+            \item 
+                Pre-dates deep learning
+            \item 
+                Data consists of substructures with much smaller dimension than the ambient space
+            \item 
+                Valuable as a heuristic, basis of most dimensionality reduction algorithms
+        \end{itemize}
+    \end{frame}
+
     \begin{frame}{Background: Overfitting}
         \begin{figure}[H]
             \centering
@@ -55,6 +116,7 @@
 
     % \begin{frame}{Overfitting}
     %     \begin{itemize}
+    \setlength{\itemsep}{2em}
     \setlength\itemsep{1em}
     %         \item 
     %             Comes from mathematical modelling
@@ -69,6 +131,7 @@
 
     \begin{frame}{Modern ML}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \setlength\itemsep{1em}
             \item 
                 Alexnet : \#(parameters) $\approx \; 65$ million
@@ -83,6 +146,7 @@
 
     \begin{frame}{Rethinking Generalisation}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \setlength\itemsep{1em}
             \item 
                 Fitting networks to random labels eventually reaches zero training error, even with random pixels (\cite{zhang2017understandingdeeplearningrequires}, \cite{arpit2017closerlookmemorizationdeep})
@@ -92,24 +156,10 @@
                 Conclusion: Resistance to overfitting or bias towards simple hypotheses
         \end{itemize}
     \end{frame}
-
-    \begin{frame}{Manifold Hypothesis}
-
-        \includegraphics[width=\textwidth]{manifold.png}
-        
-        \begin{itemize}
-            \setlength\itemsep{1em}
-            \item 
-                Pre-dates deep learning
-            \item 
-                Data consists of substructures with much smaller dimension than the ambient space
-            \item 
-                Valuable as a heuristic, basis of most dimensionality reduction algorithms
-        \end{itemize}
-    \end{frame}
     
     \begin{frame}{Existing Work on Activation Patterns}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \setlength\itemsep{1em}
             \item 
                 Interpretability: \cite{stano2020explainingpredictionsdeepneural} fits a gaussian mixture, binarises and uses the hamming distance to support predictions, \cite{bauerle2022neuralactivationpatternsnaps} is a tool to visualise activation patterns as they relate to features
@@ -119,21 +169,10 @@
                 Mechanistic Interpretability: \cite{olah2017feature,lindsey2025biology} reverse engineering a neural network by attributing semantic concepts to parts of a trained network
         \end{itemize}
     \end{frame}
-
-    \begin{frame}{Our Contributions}
-        \begin{itemize}
-            \setlength\itemsep{1em}
-            \item 
-                Analysing the robustness of neural networks in terms of circuits
-            \item 
-                Distributions over classes provide a principled means of detecting distribution shifts
-            \item 
-                Measure for robustness at deployment time for a distribution shift on a single task
-        \end{itemize}
-    \end{frame}
-
+    
     \begin{frame}{Circuits and Superposition}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \item 
                 First studied in \cite{olah2020zoom}, which argues that alongside the directions of the feature space the interactions between them are important
             \item 
@@ -142,6 +181,31 @@
                 Concepts encoded by monosemantic neurons in earlier layers may be encoded by polysemantic neurons in subsequent 
             \item 
                 Coined the term superposition which is the distribution multiple exclusive featues across the same set of directions
+        \end{itemize}
+    \end{frame}
+    
+    \begin{frame}{Our Contributions}
+        \begin{itemize}
+            \setlength{\itemsep}{2em}
+            \setlength\itemsep{1em}
+            \item 
+                Analysing the robustness of neural networks in terms of circuits
+            \item 
+                Distributions over classes provide a principled means of detecting distribution shifts
+            \item 
+                Measure for robustness at deployment time for a distribution shift on a single task, compared to OOD which is at a datapoint level
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Granularities to be Studied}
+        \begin{itemize}
+            \setlength{\itemsep}{2em}
+            \item 
+                Circuits/Neuron-Weight Interactions as bernoulli trials: Stable fits in exchange for losing higher moments of distributions
+            \item 
+                Circuits/Neuron-Weight Interactions as multivariate gaussians: Computationally very intensive to model, unstable fits but captures second moment
+            \item 
+                Neurons: Captures second moment of the distribution over activations but lose out on path information, computationally more tractable than gaussians over circuits
         \end{itemize}
     \end{frame}
 
@@ -161,23 +225,11 @@
             \end{bmatrix}
             = 
             \begin{bmatrix}
-                \sum_{i=1}^{n_in} w_{1,i}x_i\\
+                \sum_{i=1}^{n_{in}} w_{1,i}x_i\\
                 \vdots \\
-                \sum_{i=1}^{n_in} w_{n_{out},i}x_i\\
+                \sum_{i=1}^{n_{in}} w_{n_{out},i}x_i\\
             \end{bmatrix}
         \]
-    \end{frame}
-
-    \begin{frame}{Granularities to be Studied}
-        We study the internals of the neural network at 3 different granularities
-        \begin{itemize}
-            \item 
-                Circuits/Neuron-Weight Interactions as bernoulli trials: Stable fits in exchange for losing higher moments of distributions
-            \item 
-                Circuits/Neuron-Weight Interactions as multivariate gaussians: Computationally very intensive to model, unstable fits but captures second moment
-            \item 
-                Neurons: Captures second moment of the distribution over activations but lose out on path information, computationally more tractable than 
-        \end{itemize}
     \end{frame}
     
     \begin{frame}{Modelling Circuits/Neuron-Weight Interactions}
@@ -194,16 +246,14 @@
     \end{frame}
     
     \begin{frame}{Modelling Circuits/Neuron-Weight Interactions: Bernoulli}
-        An interaction is considered significant if it is large relative to the magnitude of the neuron value, corrected for the input dimension. Formally 
-        \[S_{ij} = 1 \text{ if } |x_{ij}| > \frac{|\sum_j x_{ij}|}{n_{in}} \]
-        These are flattened into a single vector for which the success proportion for each coordinate $\hat{p}$ is estimated using the MLE $\hat{p}_{i, j} = \frac{1}{k}\sum {S_{i, j}^l}$, where $l$ indexes over the $k$ datapoints
-        \[S = 
+        An interaction is considered significant if it is large relative to the magnitude of the neuron value, corrected for the input dimension. These are flattened into a single vector for which the success proportion for each coordinate $\hat{p}$ is estimated using the MLE $\hat{p}_{i, j} = \frac{1}{k}\sum {X_{i, j}^l}$, where $l$ indexes over the $k$ datapoints
+        \[X = 
         \begin{bmatrix}
-            S_{1,1} \\
+            |w_{1,1}x_1| > \frac{\sum_j w_{1j}x_j}{n_{in}} \\
             \vdots \\
-            S_{1,n_{in}} \\
+            |w_{1,n_{in}}x_{n_{in}}| > \frac{\sum_j w_{1j}x_j}{n_{in}}\\
             \vdots \\
-            S_{n_{out},n_{in}} \\
+            |w_{n_{out},n_{in}}x_{n_{in}}| > \frac{\sum_j w_{n_{out}j}x_j}{n_{in}}\\
         \end{bmatrix} \rightarrow 
         \begin{bmatrix}
             \hat{p}_{1,1} \\
@@ -241,8 +291,23 @@
         Using the same MLEs as before, a multivariate gaussian can be fit to them as well
     \end{frame}
 
+    \begin{frame}{Rationale and Limitations of the Multivariate Gaussian Model}
+        \begin{itemize}
+            \setlength{\itemsep}{2em}
+            \item 
+                Easy to fit, needs just mean and variance
+            \item 
+                Probabilities assuming parameters are easy to compute 
+            \item 
+                Ignores moments beyond variance (assumes symmetry/ignores skew)
+            \item 
+                Estimating the joint density of the kernel/a 2D histogram may capture the distributions with greater accuracy
+        \end{itemize}
+    \end{frame}
+
     \begin{frame}{Sparsity of Neuron Activations}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \setlength\itemsep{1em}
             \item 
                 Practically, pruning techniques can drastically decrease the size of neural networks
@@ -258,6 +323,7 @@
 
     \begin{frame}{KL Divergence and Entropy}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \setlength\itemsep{1em}
             \item 
                 Entropy of a distribution is a measure of the amount of information encoded in a random variable
@@ -276,6 +342,7 @@
 
     \begin{frame}{Mahalanobis Distance}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \item 
                 This is a notion of distance between a point and a distribution
             \item 
@@ -290,6 +357,7 @@
 
     \begin{frame}{Activation Distributions}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \setlength\itemsep{1em}
             \item 
                 Measured KL divergence and entropy for distributions
@@ -304,6 +372,7 @@
 
     \begin{frame}{Measuring Distribution Shifts: Dataset vs Class}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \item 
                 Now we have a notion for a distribution, which can be extended from a class to a dataset
             \item 
@@ -316,6 +385,7 @@
     
     % \begin{frame}{Detecting Adversarial Attacks}
     %     \begin{itemize}
+    \setlength{\itemsep}{2em}
     % \setlength\itemsep{1em}
     %         \item 
     %             Adversarial attacks are small changes to an image that alter it's predicted class, often with a high output probability
@@ -326,6 +396,7 @@
 
     \begin{frame}{Estimating Dimensions of a Manifold}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \setlength\itemsep{1em}
             \item 
                 Extracted the output of the final hidden layer (embedding), and computed the dimensionality of the manifolds for each class
@@ -340,6 +411,7 @@
 
     \begin{frame}{Overview of Framework}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \item 
                 Distributions over neuron-weight interactions: Increase in the separation between classes $\implies$ developing a distinct idea for each class
             \item 
@@ -351,6 +423,7 @@
 
     \begin{frame}{Models and Datasets}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \setlength\itemsep{1em}
             \item 
                 The tests were run on AlexNet, with the pretrained version trained on ImageNet coming from PyTorch
@@ -403,6 +476,7 @@
 
     \begin{frame}{Results: Sparsity - CIFAR10}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \setlength\itemsep{1em}
             \item 
                 Training encourages sparsity 
@@ -453,6 +527,7 @@
 
     \begin{frame}{Results: Sparsity - Imagenet}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \setlength\itemsep{1em}
             \item 
                 Untrained looks the same for ID and OOD
@@ -574,6 +649,7 @@
 
     \begin{frame}{Results: Distances Between Distributions}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \setlength\itemsep{1em}
             \item 
                 Training makes classes more separated
@@ -752,6 +828,7 @@
 
     \begin{frame}{Results: Distances Between Distributions - Imagenet}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \setlength\itemsep{1em}
             \item 
                Entropy of OOD class distributions sees no significant drop after training
@@ -1012,6 +1089,7 @@
     
     \begin{frame}{Results: Gaussian Fitting}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \item 
                 Results are almost identical to relative separation in the bernoulli case
             \item 
@@ -1097,6 +1175,7 @@
 
     \begin{frame}{Results: Bernoulli Log Probabilities}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \item 
                 Separation between ID and OOD is low at the last layer but gradually increases further up the network
             \item 
@@ -1133,6 +1212,7 @@
 
     \begin{frame}{Results: Norm Comparison}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \item 
                 Adversarial examples show a much smaller embedding norm than clean images
             \item 
@@ -1140,35 +1220,6 @@
             \item 
                 Subspace restriction interpretation might have merit, but needs further investigation 
         \end{itemize}
-    \end{frame}
-
-    \begin{frame}{Results: Dimensions of Manifolds on CIFAR10}
-        \begin{figure}[H]
-            \centering
-            \begin{minipage}{0.30\textwidth}
-                \centering
-                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_random_labels/probability_results/pca_overlap_heatmap.png}
-                \subcaption{Random Labels}
-                % \label{fig:image1}
-            \end{minipage}
-            \hfill
-            \begin{minipage}{0.30\textwidth}
-                \centering
-                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_250_epoch/probability_results/pca_overlap_heatmap.png}
-                \subcaption{Overtrained}
-                % \label{fig:image1}
-            \end{minipage}
-            \hfill
-            \begin{minipage}{0.30\textwidth}
-                \centering
-                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_best/probability_results/pca_overlap_heatmap.png}
-                \subcaption{Best}
-                % \label{fig:image1}
-            \end{minipage}
-            \hfill
-            \caption{Manifold Dimension Overlap Heatmaps}
-            \label{fig:pca_overlap_heatmaps}
-        \end{figure}
     \end{frame}
 
     \begin{frame}{Distances Between Datasets: KL Divergence Between Bernoulli Circuits}
@@ -1227,6 +1278,7 @@
 
     \begin{frame}{Results}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \item 
                 Distance Distribution does not seem to have much consistency
             \item 
@@ -1238,8 +1290,38 @@
         \end{itemize}
     \end{frame}
 
+    \begin{frame}{Results: Dimensions of Manifolds on CIFAR10}
+        \begin{figure}[H]
+            \centering
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_random_labels/probability_results/pca_overlap_heatmap.png}
+                \subcaption{Random Labels}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_250_epoch/probability_results/pca_overlap_heatmap.png}
+                \subcaption{Overtrained}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \begin{minipage}{0.30\textwidth}
+                \centering
+                \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_best/probability_results/pca_overlap_heatmap.png}
+                \subcaption{Best}
+                % \label{fig:image1}
+            \end{minipage}
+            \hfill
+            \caption{Manifold Dimension Overlap Heatmaps}
+            \label{fig:pca_overlap_heatmaps}
+        \end{figure}
+    \end{frame}
+
     \begin{frame}{Dimensionality of Manifolds}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \setlength\itemsep{1em}
             \item 
                 Significant overlap on the random label setting
@@ -1252,18 +1334,24 @@
     
     \begin{frame}{Conclusions}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \setlength\itemsep{1em}
             \item 
                 Significant activations are sparse
             \item 
-                Framework registers different behaviour on in and out of distribution datasets
+                Framework registers different behaviour on in and out of distribution datasets and memorising and best-fit networks
             \item 
-                Behaviour also different for networks that memorise and overtrain compared to a best-fit network
+                PGD reduces norms in the embedding space
+            \item 
+                Dataset level shifts are difficult to detect
+            \item 
+                Semantics learnt by a network are different than our understanding
         \end{itemize}
     \end{frame}
     
     \begin{frame}{Future Work}
         \begin{itemize}
+            \setlength{\itemsep}{2em}
             \setlength\itemsep{1em}
             \item 
                 More extensive benchmarking in terms of datasets and models
