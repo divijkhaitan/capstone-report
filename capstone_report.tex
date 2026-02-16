@@ -19,7 +19,7 @@
     \begin{titlepage}
         \centering
         \vspace*{1in}
-        {\Huge\bfseries Capstone Project - Deep Learning Study \par}
+        {\Huge\bfseries Capstone Thesis - A New Framework for Evaluating the Robustness of Deep Neural Networks \par}
         \vspace{1.5in}
         {\Large\itshape Divij Khaitan \par}
         \vspace{1.5in}
@@ -444,6 +444,44 @@
 
                 \end{figure}
                 
+                % KL Matrix In Distribution InceptionV3 (untrained, trained, random labels)
+                \begin{figure}[H]
+                    \centering
+                    \begin{minipage}{0.3\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/inception_v3_untrained_imgr_out/out_matrices/inception_v3_kl_matrix.png}
+                    \end{minipage}\hfill
+                    \begin{minipage}{0.3\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/inception_v3_imgr_out/out_matrices/inception_v3_kl_matrix.png}
+                    \end{minipage}\hfill
+                    \begin{minipage}{0.3\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/inception_v3_imgr_out_random_labels/out_matrices/inception_v3_kl_matrix.png}
+                    \end{minipage} 
+                    \caption{KL divergences between different classes for the untrained (left), trained (middle) and random labels (right) classes of InceptionV3 on imagenet. These are the values for the distributions for the last layer}
+                    \label{fig:kl_divergences_inceptionv3}
+                \end{figure}
+                
+                \begin{figure}[H]
+                    \centering
+                    \begin{minipage}{0.3\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/inception_v3_untrained_r/out_matrices/inception_v3_kl_matrix.png}
+                    \end{minipage}\hfill
+                    \begin{minipage}{0.3\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/inception_v3_r/out_matrices/inception_v3_kl_matrix.png}
+                    \end{minipage}\hfill
+                    \begin{minipage}{0.3\textwidth}
+                        \centering
+                        \includegraphics[width=\textwidth]{new/inception_v3_r_random_labels/out_matrices/inception_v3_kl_matrix.png}
+                    \end{minipage}
+                    
+                    \caption{KL divergences between different classes for the untrained (left), trained (middle) and random labels (right) classes of InceptionV3 on the OOD dataset imagenet-r. These are the values for the distributions for the last layer}
+                    \label{fig:kl_divergences_inceptionv3_imagenet-r}
+                \end{figure}
+
                 % Distance Matrix In Distribution
                 \begin{figure}[H]
                     \centering
@@ -920,7 +958,7 @@
                     \begin{minipage}{0.45\textwidth}
                         \centering
                         \includegraphics[width=\textwidth]{new/test_kde_plots/log_prob_analysis_cifar10_10.1_svhn_tinyimagenet.png}                        
-                        \subcaption{Log Probabilities of test activations on training distributions}
+                        \subcaption{Log Probabilities of test activations on test distributions}
                     \end{minipage}
                     \caption{Last Layer Circuits}
                     \label{fig:last_layer_circuits}
@@ -938,7 +976,7 @@
                 \begin{minipage}{0.45\textwidth}
                     \centering
                     \includegraphics[width=\textwidth]{new/test_kde_plots/log_prob_analysis_cifar10_10.1_svhn_tinyimagenet_gaussian_neurons.png}                        
-                    \subcaption{Log Probabilities of test activations on training distributions}
+                    \subcaption{Log Probabilities of test activations on test distributions}
                 \end{minipage}
                 \caption{Last Layer Neurons}
             \end{figure}
@@ -946,7 +984,7 @@
         \subsection{The Effect of Adversarial Attacks on Probability Distributions}
             Presented below are the results for just the modified version of AlexNet on CIFAR10, because running this would not be meaningful on an untrained network or an OOD dataset. The results for the version of the network on random labels compared to the version trained to convergence normally are presented below. 
         
-            The most striking feature of the adversarial attack is that the distributions over the circuits being used in the last and second-last layers are extremely similar. However, in the third-last layer we see a much larger separation between the clean and adversarial distributions. This suggests that while imperceptible, the convolutional layers are able to pick up on the noise added to the image and extract the features into a different location as compared to the clean images. Further, it also suggests that the MLP layers may be squashing all the data into a smaller subspace. This gets even more interesting when looking at the plots of the gaussian log probabiltiies. The separation at the last layer is extremely stark, which suggests that even though the same circuits are being activated for the clean and adversarial inputs, they are being activated in a noticably different fashion. The results presented are for the training distribution on the test set, because the differences between the two were not significant.
+            The most striking feature of the adversarial attack is that the distributions over the circuits being used in the last and second-last layers are extremely similar. However, in the third-last layer we see a much larger separation between the clean and adversarial distributions. This suggests that while imperceptible, the convolutional layers are able to pick up on the noise added to the image and extract the features into a different location as compared to the clean images. Further, it also suggests that the MLP layers may be squashing all the data into a smaller subspace. This gets even more interesting when looking at the plots of the gaussian log probabiltiies. The separation at the last layer is extremely stark, which suggests that even though the same circuits are being activated for the clean and adversarial inputs, they are being activated in a noticably different fashion. The results presented are for the training distribution on the test set, because the differences between the two were not significant. While for InceptionV3, we only have a single linear layer to analyse, we can see the same pattern at the last layer with no separation between the clean and adversarial distributions.
             \begin{figure}[H]
                 \centering
                 \begin{minipage}{0.32\textwidth}
@@ -970,7 +1008,19 @@
                 \label{fig:adv_log_probs}
             \end{figure}                
             
-            To test this hypothesis, we compared the norms of adversarially attacked inputs to clean inputs and the results are attached below. There is a clear cut separation in between the norms of both datasets, which lends credence to the idea that adversarially attacked inputs push the embedding closer to the null space of the liner layers. Note that this is with a much weaker PGD attack (10 iterations), and the shift is extremely noticable. 
+            \begin{figure}[H]
+                \centering
+                \begin{minipage}{\textwidth}
+                    \centering
+                    \includegraphics[width=\textwidth]{new/inception_v3_imgr_r_log_prob_analysis_adv.png}
+                    \subcaption{Last Layer}
+                \end{minipage}%
+                \caption{Log Probabilities under an Adversarial Attack on Inception V3 for ImageNet}
+                \label{fig:adv_log_probs_inceptionv3}
+            \end{figure}                
+            
+
+            To test this hypothesis, we compared the norms of adversarially attacked inputs to clean inputs and the results are attached below. There is a clear cut separation in between the norms of both datasets, which lends credence to the idea that adversarially attacked inputs push the embedding closer to the null space of the liner layers. Note that this is with a much weaker PGD attack (10 iterations), and the shift is extremely noticable. InceptionV3 has the opposite behaviour, with the adversarial inputs having a larger norm than the clean inputs. This may suggest that the nature of the adversarial attack is extremely different for different architectures, and it is not immediately clear what that difference is. 
             \begin{figure}[H]
                 \centering
                 \begin{minipage}{\textwidth}
@@ -990,34 +1040,46 @@
                     \includegraphics[width=\textwidth]{new/pgd_small_alexnet/norm_comparison_small_alexnet_10_iter_layer_index_-3.png}
                     \subcaption{Third Last Layer}
                 \end{minipage}%
-                \caption{Change in Embedding Norms under an Adversarial Attack}
+                \caption{Change in Embedding Norms under an Adversarial Attack on Small AlexNet for CIFAR10}
                 \label{fig:adv_norms}
             \end{figure}                
             
-        \subsection{Manifold Entanglement}
-            The difference between the manifolds for both networks is quite stark. The random network not only has significant overlap between classes, the manifolds also have much higher rank. The clean network doesn't see any overlap at all, and has lower rank manifolds. Additionally, we see that the overtrained manifold has several classes actually increase in rank. This lines up with the hypothesis of the 'optimal' solution being a substructure with lower rank. 
             \begin{figure}[H]
                 \centering
-                
-                \begin{minipage}{0.45\textwidth}
+                \begin{minipage}{\textwidth}
                     \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_random_labels/probability_results/pca_overlap_heatmap.png}
-                    
-                \end{minipage}\hfill
-                
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_250_epoch/probability_results/pca_overlap_heatmap.png}
-                    
-                \end{minipage}\hfill
-                \begin{minipage}{0.45\textwidth}
-                    \centering
-                    \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best/probability_results/pca_overlap_heatmap.png}
-                \end{minipage}
+                    \includegraphics[width=\textwidth]{new/inception_v3_activation_norm_comparison_layer_index_-1.png}
+                    \subcaption{Last Layer}
+                \end{minipage}%
+                \caption{Change in Embedding Norms under an Adversarial Attack on Inception V3 for ImageNet}
+                \label{fig:adv_norms_inceptionv3}
+            \end{figure}                
             
-                \caption{Pairwise Entaglements for different classes for the random network (left) and the clean network (right)}
-                \label{fig:manifold_entanglement_small_alexnet}
-            \end{figure}
+
+        % \subsection{Manifold Entanglement}
+        %     The difference between the manifolds for both networks is quite stark. The random network not only has significant overlap between classes, the manifolds also have much higher rank. The clean network doesn't see any overlap at all, and has lower rank manifolds. Additionally, we see that the overtrained manifold has several classes actually increase in rank. This lines up with the hypothesis of the 'optimal' solution being a substructure with lower rank. 
+        %     \begin{figure}[H]
+        %         \centering
+                
+        %         \begin{minipage}{0.45\textwidth}
+        %             \centering
+        %             \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_random_labels/probability_results/pca_overlap_heatmap.png}
+                    
+        %         \end{minipage}\hfill
+                
+        %         \begin{minipage}{0.45\textwidth}
+        %             \centering
+        %             \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_250_epoch/probability_results/pca_overlap_heatmap.png}
+                    
+        %         \end{minipage}\hfill
+        %         \begin{minipage}{0.45\textwidth}
+        %             \centering
+        %             \includegraphics[width=\textwidth]{new/small_alexnet_cifar10_best/probability_results/pca_overlap_heatmap.png}
+        %         \end{minipage}
+            
+        %         \caption{Pairwise Entaglements for different classes for the random network (left) and the clean network (right)}
+        %         \label{fig:manifold_entanglement_small_alexnet}
+        %     \end{figure}
         
     \section{Conclusions and Future Work}
         The above results present a new way of looking at and analysing a trained neural network. We analyse the distributions of class activations and the effect of training on their evolution. We also analyse the change in probability under an adversarial attack and the entanglement of class manifolds under different conditions. We believe that as an evaluation framework, this is more robust to overfitting by inspecting the similarities at higher layers as well as lower layers. The linear manifold model using PCA makes particularly strong assumptions such as gaussian data distribution, which the KL divergence model does not. An immediate advantage of our proposed framework is a very noticable change on an overtrained network, where the PCA manifolds see a subtle increase in dimension, our framework sees a noticable decrease in the separation of the class distributions. Our framework additionally shows different behaviour on overfitting and registers different behaviours for in-distribution data and OOD data. We believe this framework can be further extended to build a tool that can enhance robustness to both adversarial and tail inputs as well as detect poor generalisation. 
