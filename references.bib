@@ -1,0 +1,547 @@
+@InProceedings{pmlr-v80-arora18a,
+	title = 	 {On the Optimization of Deep Networks: Implicit Acceleration by Overparameterization},
+	author =       {Arora, Sanjeev and Cohen, Nadav and Hazan, Elad},
+	booktitle = 	 {Proceedings of the 35th International Conference on Machine Learning},
+	pages = 	 {244--253},
+	year = 	 {2018},
+	editor = 	 {Dy, Jennifer and Krause, Andreas},
+	volume = 	 {80},
+	series = 	 {Proceedings of Machine Learning Research},
+	month = 	 {10--15 Jul},
+	publisher =    {PMLR},
+	pdf = 	 {http://proceedings.mlr.press/v80/arora18a/arora18a.pdf},
+	url = 	 {https://proceedings.mlr.press/v80/arora18a.html},
+	abstract = 	 {Conventional wisdom in deep learning states that increasing depth improves expressiveness but complicates optimization. This paper suggests that, sometimes, increasing depth can speed up optimization. The effect of depth on optimization is decoupled from expressiveness by focusing on settings where additional layers amount to overparameterization – linear neural networks, a well-studied model. Theoretical analysis, as well as experiments, show that here depth acts as a preconditioner which may accelerate convergence. Even on simple convex problems such as linear regression with $\ell_p$ loss, $p&gt;2$, gradient descent can benefit from transitioning to a non-convex overparameterized objective, more than it would from some common acceleration schemes. We also prove that it is mathematically impossible to obtain the acceleration effect of overparametrization via gradients of any regularizer.}
+}
+@misc{zhang2017understandingdeeplearningrequires,
+	title={Understanding deep learning requires rethinking generalization}, 
+	author={Chiyuan Zhang and Samy Bengio and Moritz Hardt and Benjamin Recht and Oriol Vinyals},
+	year={2017},
+	eprint={1611.03530},
+	archivePrefix={arXiv},
+	primaryClass={cs.LG},
+	url={https://arxiv.org/abs/1611.03530}, 
+}
+@InProceedings{pmlr-v108-li20j,
+	title = 	 {Gradient Descent with Early Stopping is Provably Robust to Label Noise for Overparameterized Neural Networks},
+	author =       {Li, Mingchen and Soltanolkotabi, Mahdi and Oymak, Samet},
+	booktitle = 	 {Proceedings of the Twenty Third International Conference on Artificial Intelligence and Statistics},
+	pages = 	 {4313--4324},
+	year = 	 {2020},
+	editor = 	 {Chiappa, Silvia and Calandra, Roberto},
+	volume = 	 {108},
+	series = 	 {Proceedings of Machine Learning Research},
+	month = 	 {26--28 Aug},
+	publisher =    {PMLR},
+	pdf = 	 {http://proceedings.mlr.press/v108/li20j/li20j.pdf},
+	url = 	 {https://proceedings.mlr.press/v108/li20j.html},
+	abstract = 	 {Modern neural networks are typically trained in an over-parameterized regime where the parameters of the model far exceed the size of the training data. Such neural networks in principle have the capacity to (over)fit any set of labels including significantly corrupted ones. Despite this (over)fitting capacity in this paper we demonstrate that such overparameterized networks have an intriguing robustness capability: they are surprisingly robust to label noise when first order methods with early stopping is used to train them. This paper also takes a step towards demystifying this phenomena. Under a rich dataset model, we show that gradient descent is provably robust to noise/corruption on a constant fraction of the labels. In particular, we prove that: (i) In the first few iterations where the updates are still in the vicinity of the initialization gradient descent only fits to the correct labels essentially ignoring the noisy labels. (ii) To start to overfit to the noisy labels network must stray rather far from the initialization which can only occur after many more iterations. Together, these results show that gradient descent with early stopping is provably robust to label noise and shed light on the empirical robustness of deep networks as well as commonly adopted heuristics to prevent overfitting.}
+}
+@misc{neyshabur2015searchrealinductivebias,
+	title={In Search of the Real Inductive Bias: On the Role of Implicit Regularization in Deep Learning}, 
+	author={Behnam Neyshabur and Ryota Tomioka and Nathan Srebro},
+	year={2015},
+	eprint={1412.6614},
+	archivePrefix={arXiv},
+	primaryClass={cs.LG},
+	url={https://arxiv.org/abs/1412.6614}, 
+}
+@misc{arpit2017closerlookmemorizationdeep,
+	title={A Closer Look at Memorization in Deep Networks}, 
+	author={Devansh Arpit and Stanisław Jastrzębski and Nicolas Ballas and David Krueger and Emmanuel Bengio and Maxinder S. Kanwal and Tegan Maharaj and Asja Fischer and Aaron Courville and Yoshua Bengio and Simon Lacoste-Julien},
+	year={2017},
+	eprint={1706.05394},
+	archivePrefix={arXiv},
+	primaryClass={stat.ML},
+	url={https://arxiv.org/abs/1706.05394},
+}
+@misc{neyshabur2017implicitregularizationdeeplearning,
+	title={Implicit Regularization in Deep Learning}, 
+	author={Behnam Neyshabur},
+	year={2017},
+	eprint={1709.01953},
+	archivePrefix={arXiv},
+	primaryClass={cs.LG},
+	url={https://arxiv.org/abs/1709.01953}, 
+}
+@misc{razin2020implicitregularizationdeeplearning,
+	title={Implicit Regularization in Deep Learning May Not Be Explainable by Norms}, 
+	author={Noam Razin and Nadav Cohen},
+	year={2020},
+	eprint={2005.06398},
+	archivePrefix={arXiv},
+	primaryClass={cs.LG},
+	url={https://arxiv.org/abs/2005.06398}, 
+}
+
+@misc{arora2019implicitregularizationdeepmatrix,
+	title={Implicit Regularization in Deep Matrix Factorization}, 
+	author={Sanjeev Arora and Nadav Cohen and Wei Hu and Yuping Luo},
+	year={2019},
+	eprint={1905.13655},
+	archivePrefix={arXiv},
+	primaryClass={cs.LG},
+	url={https://arxiv.org/abs/1905.13655}, 
+}
+
+@misc{gissin2019implicitbiasdepthincremental,
+	title={The Implicit Bias of Depth: How Incremental Learning Drives Generalization}, 
+	author={Daniel Gissin and Shai Shalev-Shwartz and Amit Daniely},
+	year={2019},
+	eprint={1909.12051},
+	archivePrefix={arXiv},
+	primaryClass={cs.LG},
+	url={https://arxiv.org/abs/1909.12051}, 
+}
+
+@misc{hendrycks2018baselinedetectingmisclassifiedoutofdistribution,
+	title={A Baseline for Detecting Misclassified and Out-of-Distribution Examples in Neural Networks}, 
+	author={Dan Hendrycks and Kevin Gimpel},
+	year={2018},
+	eprint={1610.02136},
+	archivePrefix={arXiv},
+	primaryClass={cs.NE},
+	url={https://arxiv.org/abs/1610.02136}, 
+}
+
+@misc{hendrycks2019deepanomalydetectionoutlier,
+	title={Deep Anomaly Detection with Outlier Exposure}, 
+	author={Dan Hendrycks and Mantas Mazeika and Thomas Dietterich},
+	year={2019},
+	eprint={1812.04606},
+	archivePrefix={arXiv},
+	primaryClass={cs.LG},
+	url={https://arxiv.org/abs/1812.04606}, 
+}
+
+@misc{liang2020enhancingreliabilityoutofdistributionimage,
+	title={Enhancing The Reliability of Out-of-distribution Image Detection in Neural Networks}, 
+	author={Shiyu Liang and Yixuan Li and R. Srikant},
+	year={2020},
+	eprint={1706.02690},
+	archivePrefix={arXiv},
+	primaryClass={cs.LG},
+	url={https://arxiv.org/abs/1706.02690}, 
+}
+
+@misc{lee2018simpleunifiedframeworkdetecting,
+	title={A Simple Unified Framework for Detecting Out-of-Distribution Samples and Adversarial Attacks}, 
+	author={Kimin Lee and Kibok Lee and Honglak Lee and Jinwoo Shin},
+	year={2018},
+	eprint={1807.03888},
+	archivePrefix={arXiv},
+	primaryClass={stat.ML},
+	url={https://arxiv.org/abs/1807.03888}, 
+}
+
+@misc{madry2019deeplearningmodelsresistant,
+	title={Towards Deep Learning Models Resistant to Adversarial Attacks}, 
+	author={Aleksander Madry and Aleksandar Makelov and Ludwig Schmidt and Dimitris Tsipras and Adrian Vladu},
+	year={2019},
+	eprint={1706.06083},
+	archivePrefix={arXiv},
+	primaryClass={stat.ML},
+	url={https://arxiv.org/abs/1706.06083}, 
+}
+
+@misc{hendrycks2021facesrobustnesscriticalanalysis,
+	title={The Many Faces of Robustness: A Critical Analysis of Out-of-Distribution Generalization}, 
+	author={Dan Hendrycks and Steven Basart and Norman Mu and Saurav Kadavath and Frank Wang and Evan Dorundo and Rahul Desai and Tyler Zhu and Samyak Parajuli and Mike Guo and Dawn Song and Jacob Steinhardt and Justin Gilmer},
+	year={2021},
+	eprint={2006.16241},
+	archivePrefix={arXiv},
+	primaryClass={cs.CV},
+	url={https://arxiv.org/abs/2006.16241}, 
+}
+
+@misc{szegedy2014intriguingpropertiesneuralnetworks,
+	title={Intriguing properties of neural networks}, 
+	author={Christian Szegedy and Wojciech Zaremba and Ilya Sutskever and Joan Bruna and Dumitru Erhan and Ian Goodfellow and Rob Fergus},
+	year={2014},
+	eprint={1312.6199},
+	archivePrefix={arXiv},
+	primaryClass={cs.CV},
+	url={https://arxiv.org/abs/1312.6199}, 
+}
+
+@misc{sastry2020detectingoutofdistributionexamplesindistribution,
+	title={Detecting Out-of-Distribution Examples with In-distribution Examples and Gram Matrices}, 
+	author={Chandramouli Shama Sastry and Sageev Oore},
+	year={2020},
+	eprint={1912.12510},
+	archivePrefix={arXiv},
+	primaryClass={cs.LG},
+	url={https://arxiv.org/abs/1912.12510}, 
+}
+
+@misc{shamir2022dimpledmanifoldmodeladversarial,
+	title={The Dimpled Manifold Model of Adversarial Examples in Machine Learning}, 
+	author={Adi Shamir and Odelia Melamed and Oriel BenShmuel},
+	year={2022},
+	eprint={2106.10151},
+	archivePrefix={arXiv},
+	primaryClass={cs.LG},
+	url={https://arxiv.org/abs/2106.10151}, 
+}
+
+@misc{meil2023manifoldlearningwhathow,
+	title={Manifold learning: what, how, and why}, 
+	author={Marina Meilă and Hanyu Zhang},
+	year={2023},
+	eprint={2311.03757},
+	archivePrefix={arXiv},
+	primaryClass={stat.ML},
+	url={https://arxiv.org/abs/2311.03757}, 
+}
+
+@misc{Krizhevsky2009LearningML,
+	title={Learning Multiple Layers of Features from Tiny Images},
+	author={Alex Krizhevsky},
+	year={2009},
+	url={https://api.semanticscholar.org/CorpusID:18268744}
+}
+
+@misc{russakovsky2015imagenetlargescalevisual,
+	title={ImageNet Large Scale Visual Recognition Challenge}, 
+	author={Olga Russakovsky and Jia Deng and Hao Su and Jonathan Krause and Sanjeev Satheesh and Sean Ma and Zhiheng Huang and Andrej Karpathy and Aditya Khosla and Michael Bernstein and Alexander C. Berg and Li Fei-Fei},
+	year={2015},
+	eprint={1409.0575},
+	archivePrefix={arXiv},
+	primaryClass={cs.CV},
+	url={https://arxiv.org/abs/1409.0575}, 
+}
+
+@inproceedings{NIPS2010_8a1e808b,
+	author = {Narayanan, Hariharan and Mitter, Sanjoy},
+	booktitle = {Advances in Neural Information Processing Systems},
+	editor = {J. Lafferty and C. Williams and J. Shawe-Taylor and R. Zemel and A. Culotta},
+	pages = {},
+	publisher = {Curran Associates, Inc.},
+	title = {Sample Complexity of Testing the Manifold Hypothesis},
+	url = {https://proceedings.neurips.cc/paper_files/paper/2010/file/8a1e808b55fde9455cb3d8857ed88389-Paper.pdf},
+	volume = {23},
+	year = {2010}
+}
+
+@misc{fefferman2013testingmanifoldhypothesis,
+	title={Testing the Manifold Hypothesis}, 
+	author={Charles Fefferman and Sanjoy Mitter and Hariharan Narayanan},
+	year={2013},
+	eprint={1310.0425},
+	archivePrefix={arXiv},
+	primaryClass={math.ST},
+	url={https://arxiv.org/abs/1310.0425}, 
+}
+
+@misc{shafahi2020adversarialexamplesinevitable,
+	title={Are adversarial examples inevitable?}, 
+	author={Ali Shafahi and W. Ronny Huang and Christoph Studer and Soheil Feizi and Tom Goldstein},
+	year={2020},
+	eprint={1809.02104},
+	archivePrefix={arXiv},
+	primaryClass={cs.LG},
+	url={https://arxiv.org/abs/1809.02104}, 
+}
+
+@misc{liu2021energybasedoutofdistributiondetection,
+      title={Energy-based Out-of-distribution Detection}, 
+      author={Weitang Liu and Xiaoyun Wang and John D. Owens and Yixuan Li},
+      year={2021},
+      eprint={2010.03759},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2010.03759}, 
+}
+@misc{sun2021reactoutofdistributiondetectionrectified,
+      title={ReAct: Out-of-distribution Detection With Rectified Activations}, 
+      author={Yiyou Sun and Chuan Guo and Yixuan Li},
+      year={2021},
+      eprint={2111.12797},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2111.12797}, 
+}
+@misc{sun2022diceleveragingsparsificationoutofdistribution,
+      title={DICE: Leveraging Sparsification for Out-of-Distribution Detection}, 
+      author={Yiyou Sun and Yixuan Li},
+      year={2022},
+      eprint={2111.09805},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2111.09805}, 
+}
+@misc{morteza2021provableguaranteesunderstandingoutofdistribution,
+      title={Provable Guarantees for Understanding Out-of-distribution Detection}, 
+      author={Peyman Morteza and Yixuan Li},
+      year={2021},
+      eprint={2112.00787},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2112.00787}, 
+}
+
+@misc{ahn2023lineoutofdistributiondetectionleveraging,
+      title={LINe: Out-of-Distribution Detection by Leveraging Important Neurons}, 
+      author={Yong Hyun Ahn and Gyeong-Moon Park and Seong Tae Kim},
+      year={2023},
+      eprint={2303.13995},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2303.13995}, 
+}
+
+@misc{ribeiro2016whyitrustyou,
+      title={"Why Should I Trust You?": Explaining the Predictions of Any Classifier}, 
+      author={Marco Tulio Ribeiro and Sameer Singh and Carlos Guestrin},
+      year={2016},
+      eprint={1602.04938},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/1602.04938}, 
+}
+
+@misc{lundberg2017unifiedapproachinterpretingmodel,
+      title={A Unified Approach to Interpreting Model Predictions}, 
+      author={Scott Lundberg and Su-In Lee},
+      year={2017},
+      eprint={1705.07874},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/1705.07874}, 
+}
+
+@article{faaaf4beb6f24ca599a7ecae54e0c724,
+	title = "On pixel-wise explanations for non-linear classifier decisions by layer-wise relevance propagation",
+	abstract = "Understanding and interpreting classification decisions of automated image classification systems is of high value in many applications, as it allows to verify the reasoning of the system and provides additional information to the human expert. Although machine learning methods are solving very successfully a plethora of tasks, they have in most cases the disadvantage of acting as a black box, not providing any information about what made them arrive at a particular decision. This work proposes a general solution to the problem of understanding classification decisions by pixel-wise decomposition of nonlinear classifiers. We introduce a methodology that allows to visualize the contributions of single pixels to predictions for kernel-based classifiers over Bag of Words features and for multilayered neural networks. These pixel contributions can be visualized as heatmaps and are provided to a human expert who can intuitively not only verify the validity of the classification decision, but also focus further analysis on regions of potential interest.We evaluate our method for classifiers trained on PASCAL VOC 2009 images, synthetic image data containing geometric shapes, the MNIST handwritten digits data set and for the pre-trained ImageNet model available as part of the Caffe open source package.",
+	author = "Sebastian Bach and Alexander Binder and Gr{\'e}goire Montavon and Frederick Klauschen and M{\"u}ller, {Klaus Robert} and Wojciech Samek",
+	note = "Funding Information: This work was supported in part by the Federal Ministry of Economics and Technology of Germany (BMWi) under the project THESEUS, grant 01MQ07018, by the German Ministry for Education and Research as Berlin Big Data Center BBDC, funding mark 01IS14013A and by DFG. KRM thanks for partial funding by the National Research Foundation of Korea funded by the Ministry of Education, Science, and Technology in the BK21 program. Correspondence should be addressed to SB, KRM and WS. Publisher Copyright: {\textcopyright} 2015 Bach et al. This is an open access article distributed under the terms of the Creative Commons Attribution License, which permits unrestricted use, distribution, and reproduction in any medium, provided the original author and source are credited.",
+	year = "2015",
+	month = jul,
+	day = "10",
+	doi = "10.1371/journal.pone.0130140",
+	language = "English",
+	volume = "10",
+	journal = "PloS one",
+	issn = "1932-6203",
+	publisher = "Public Library of Science",
+	number = "7",
+}
+@misc{simonyan2014deepinsideconvolutionalnetworks,
+      title={Deep Inside Convolutional Networks: Visualising Image Classification Models and Saliency Maps}, 
+      author={Karen Simonyan and Andrea Vedaldi and Andrew Zisserman},
+      year={2014},
+      eprint={1312.6034},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/1312.6034}, 
+}
+
+@article{Selvaraju_2019,
+	title={Grad-CAM: Visual Explanations from Deep Networks via Gradient-Based Localization},
+	volume={128},
+	ISSN={1573-1405},
+	url={http://dx.doi.org/10.1007/s11263-019-01228-7},
+	DOI={10.1007/s11263-019-01228-7},
+	number={2},
+	journal={International Journal of Computer Vision},
+	publisher={Springer Science and Business Media LLC},
+	author={Selvaraju, Ramprasaath R. and Cogswell, Michael and Das, Abhishek and Vedantam, Ramakrishna and Parikh, Devi and Batra, Dhruv},
+	year={2019},
+	month=oct, pages={336-359} 
+}
+
+@misc{gautam2021lookslikethatenhancing,
+      title={This looks more like that: Enhancing Self-Explaining Models by Prototypical Relevance Propagation}, 
+      author={Srishti Gautam and Marina M. -C. Höhne and Stine Hansen and Robert Jenssen and Michael Kampffmeyer},
+      year={2021},
+      eprint={2108.12204},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2108.12204}, 
+}
+
+@misc{gautam2024prototypicalselfexplainablemodelsretraining,
+      title={Prototypical Self-Explainable Models Without Re-training}, 
+      author={Srishti Gautam and Ahcene Boubekki and Marina M. C. Höhne and Michael C. Kampffmeyer},
+      year={2024},
+      eprint={2312.07822},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2312.07822}, 
+}
+
+@misc{Le2015TinyIV,
+	title={Tiny ImageNet Visual Recognition Challenge},
+	author={Ya Le and Xuan S. Yang},
+	year={2015},
+	url={https://api.semanticscholar.org/CorpusID:16664790}
+}
+
+@inproceedings{37648,
+    author = {Yuval Netzer and Tao Wang and Adam Coates and Alessandro Bissacco and Bo Wu and Andrew Y. Ng},	
+    title = {Reading Digits in Natural Images with Unsupervised Feature Learning},
+    year = {2011}, 
+    URL = {http://ufldl.stanford.edu/housenumbers/nips2011_housenumbers.pdf},
+    booktitle = {NIPS Workshop on Deep Learning and Unsupervised Feature Learning 2011}
+}
+
+@misc{yu2016lsunconstructionlargescaleimage,
+      title={LSUN: Construction of a Large-scale Image Dataset using Deep Learning with Humans in the Loop}, 
+      author={Fisher Yu and Ari Seff and Yinda Zhang and Shuran Song and Thomas Funkhouser and Jianxiong Xiao},
+      year={2016},
+      eprint={1506.03365},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/1506.03365}, 
+}
+
+@misc{recht2018cifar10classifiersgeneralizecifar10,
+      title={Do CIFAR-10 Classifiers Generalize to CIFAR-10?}, 
+      author={Benjamin Recht and Rebecca Roelofs and Ludwig Schmidt and Vaishaal Shankar},
+      year={2018},
+      eprint={1806.00451},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/1806.00451}, 
+}
+
+@misc{goodfellow2015explainingharnessingadversarialexamples,
+	title={Explaining and Harnessing Adversarial Examples}, 
+	author={Ian J. Goodfellow and Jonathon Shlens and Christian Szegedy},
+	year={2015},
+	eprint={1412.6572},
+	archivePrefix={arXiv},
+	primaryClass={stat.ML},
+	url={https://arxiv.org/abs/1412.6572}, 
+}
+@misc{paterson2021detectionmitigationraresubclasses,
+	title={Detection and Mitigation of Rare Subclasses in Deep Neural Network Classifiers}, 
+	author={Colin Paterson and Radu Calinescu and Chiara Picardi},
+	year={2021},
+	eprint={1911.12780},
+	archivePrefix={arXiv},
+	primaryClass={cs.LG},
+	url={https://arxiv.org/abs/1911.12780}, 
+}
+@misc{hohman2019summitscalingdeeplearning,
+	title={Summit: Scaling Deep Learning Interpretability by Visualizing Activation and Attribution Summarizations}, 
+	author={Fred Hohman and Haekyu Park and Caleb Robinson and Duen Horng Chau},
+	year={2019},
+	eprint={1904.02323},
+	archivePrefix={arXiv},
+	primaryClass={cs.HC},
+	url={https://arxiv.org/abs/1904.02323}, 
+}
+@misc{stano2020explainingpredictionsdeepneural,
+	title={Explaining Predictions of Deep Neural Classifier via Activation Analysis}, 
+	author={Martin Stano and Wanda Benesova and Lukas Samuel Martak},
+	year={2020},
+	eprint={2012.02248},
+	archivePrefix={arXiv},
+	primaryClass={cs.AI},
+	url={https://arxiv.org/abs/2012.02248}, 
+}
+@misc{olber2023detectionoutofdistributionsamplesusing,
+	title={Detection of out-of-distribution samples using binary neuron activation patterns}, 
+	author={Bartlomiej Olber and Krystian Radlak and Adam Popowicz and Michal Szczepankiewicz and Krystian Chachuła},
+	year={2023},
+	eprint={2212.14268},
+	archivePrefix={arXiv},
+	primaryClass={cs.LG},
+	url={https://arxiv.org/abs/2212.14268}, 
+}
+@misc{bauerle2022neuralactivationpatternsnaps,
+	title={Neural Activation Patterns (NAPs): Visual Explainability of Learned Concepts}, 
+	author={Alex Bäuerle and Daniel Jönsson and Timo Ropinski},
+	year={2022},
+	eprint={2206.10611},
+	archivePrefix={arXiv},
+	primaryClass={cs.LG},
+	url={https://arxiv.org/abs/2206.10611}, 
+}
+@article{olah2017feature,
+	author = {Olah, Chris and Mordvintsev, Alexander and Schubert, Ludwig},
+	title = {Feature Visualization},
+	journal = {Distill},
+	year = {2017},
+	url = {https://distill.pub/2017/feature-visualization},
+	doi = {10.23915/distill.00007}
+}
+
+@article{olah2018the,
+	author = {Olah, Chris and Satyanarayan, Arvind and Johnson, Ian and Carter, Shan and Schubert, Ludwig and Ye, Katherine and Mordvintsev, Alexander},
+	title = {The Building Blocks of Interpretability},
+	journal = {Distill},
+	year = {2018},
+	url = {https://distill.pub/2018/building-blocks},
+	doi = {10.23915/distill.00010}
+}
+
+@article{olah2020zoom,
+	author = {Olah, Chris and Cammarata, Nick and Schubert, Ludwig and Goh, Gabriel and Petrov, Michael and Carter, Shan},
+	title = {Zoom In: An Introduction to Circuits},
+	journal = {Distill},
+	year = {2020},
+	url = {https://distill.pub/2020/circuits/zoom-in},
+	doi = {10.23915/distill.00024.001}
+}
+
+@article{elhage2022solu,
+	title={Softmax Linear Units},
+	author={Elhage, Nelson and Hume, Tristan and Olsson, Catherine and Nanda, Neel and Henighan, Tom and Johnston, Scott and ElShowk, Sheer and Joseph, Nicholas and DasSarma, Nova and Mann, Ben and Hernandez, Danny and Askell, Amanda and Ndousse, Kamal and Jones, Andy and Drain, Dawn and Chen, Anna and Bai, Yuntao and Ganguli, Deep and Lovitt, Liane and Hatfield-Dodds, Zac and Kernion, Jackson and Conerly, Tom and Kravec, Shauna and Fort, Stanislav and Kadavath, Saurav and Jacobson, Josh and Tran-Johnson, Eli and Kaplan, Jared and Clark, Jack and Brown, Tom and McCandlish, Sam and Amodei, Dario and Olah, Christopher},
+	year={2022},
+	journal={Transformer Circuits Thread},
+	url={https://transformer-circuits.pub/2022/solu/index.html}
+}
+
+@article{elhage2022superposition,
+	title={Toy Models of Superposition},
+	author={Elhage, Nelson and Hume, Tristan and Olsson, Catherine and Schiefer, Nicholas and Henighan, Tom and Kravec, Shauna and Hatfield-Dodds, Zac and Lasenby, Robert and Drain, Dawn and Chen, Carol and Grosse, Roger and McCandlish, Sam and Kaplan, Jared and Amodei, Dario and Wattenberg, Martin and Olah, Christopher},
+	year={2022},
+	journal={Transformer Circuits Thread},
+	url={https://transformer-circuits.pub/2022/toy_model/index.html}
+}
+
+@article{bricken2023monosemanticity,
+	title={Towards Monosemanticity: Decomposing Language Models With Dictionary Learning},
+	author={Bricken, Trenton and Templeton, Adly and Batson, Joshua and Chen, Brian and Jermyn, Adam and Conerly, Tom and Turner, Nick and Anil, Cem and Denison, Carson and Askell, Amanda and Lasenby, Robert and Wu, Yifan and Kravec, Shauna and Schiefer, Nicholas and Maxwell, Tim and Joseph, Nicholas and Hatfield-Dodds, Zac and Tamkin, Alex and Nguyen, Karina and McLean, Brayden and Burke, Josiah E and Hume, Tristan and Carter, Shan and Henighan, Tom and Olah, Christopher},
+	year={2023},
+	journal={Transformer Circuits Thread},
+	url={https://transformer-circuits.pub/2023/monosemantic-features/index.html}
+}
+
+@article{templeton2024scaling,
+	title={Scaling Monosemanticity: Extracting Interpretable Features from Claude 3 Sonnet},
+	author={Templeton, Adly and Conerly, Tom and Marcus, Jonathan and Lindsey, Jack and Bricken, Trenton and Chen, Brian and Pearce, Adam and Citro, Craig and Ameisen, Emmanuel and Jones, Andy and Cunningham, Hoagy and Turner, Nicholas L and McDougall, Callum and MacDiarmid, Monte and Freeman, C. Daniel and Sumers, Theodore R. and Rees, Edward and Batson, Joshua and Jermyn, Adam and Carter, Shan and Olah, Chris and Henighan, Tom},
+	year={2024},
+	journal={Transformer Circuits Thread},
+	url={https://transformer-circuits.pub/2024/scaling-monosemanticity/index.html}
+}
+
+@article{lindsey2025biology,
+	author={Lindsey, Jack and Gurnee, Wes and Ameisen, Emmanuel and Chen, Brian and Pearce, Adam and Turner, Nicholas L. and Citro, Craig and Abrahams, David and Carter, Shan and Hosmer, Basil and Marcus, Jonathan and Sklar, Michael and Templeton, Adly and Bricken, Trenton and McDougall, Callum and Cunningham, Hoagy and Henighan, Thomas and Jermyn, Adam and Jones, Andy and Persic, Andrew and Qi, Zhenyi and Thompson, T. Ben and Zimmerman, Sam and Rivoire, Kelley and Conerly, Thomas and Olah, Chris and Batson, Joshua},
+	title={On the Biology of a Large Language Model},
+	journal={Transformer Circuits Thread},
+	year={2025},
+	url={https://transformer-circuits.pub/2025/attribution-graphs/biology.html}
+}
+
+@misc{sharifi2024gradientregularizedoutofdistributiondetection,
+      title={Gradient-Regularized Out-of-Distribution Detection}, 
+      author={Sina Sharifi and Taha Entesari and Bardia Safaei and Vishal M. Patel and Mahyar Fazlyab},
+      year={2024},
+      eprint={2404.12368},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2404.12368}, 
+}
+
+@misc{szegedy2015rethinkinginceptionarchitecturecomputer,
+      title={Rethinking the Inception Architecture for Computer Vision}, 
+      author={Christian Szegedy and Vincent Vanhoucke and Sergey Ioffe and Jonathon Shlens and Zbigniew Wojna},
+      year={2015},
+      eprint={1512.00567},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/1512.00567}, 
+}
