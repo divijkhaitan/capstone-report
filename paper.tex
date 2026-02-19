@@ -1,0 +1,543 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{float}
+\usepackage{booktabs} % For better horizontal lines
+
+\usepackage[T1]{fontenc}
+\title{A New Framework to Analyse the Distributional Robustness of Deep Neural Networks}
+\author{Divij Khaitan}
+\date{\today}
+\usepackage{longtable}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{subcaption}
+\DeclareMathOperator{\softmax}{softmax}
+\begin{document}
+
+    \maketitle
+
+    % TODO: Abstract
+    \begin{abstract}
+        Deep neural networks have achieved impressive performance on a variety of tasks, but their brittleness to distributional shifts remains a significant barrier to real-world deployment. In this paper, we propose a novel framework to analyse and quantify the distributional robustness of neural networks by studying the interactions between neuron weights and activations. We model class-wise neuron activation distributions using both Bernoulli and multivariate Gaussian distributions, allowing us to capture granular and correlated behaviours respectively. We demonstrate the effectiveness of our framework through experiments on CIFAR-10 and ImageNet, showing that our proposed metrics can effectively distinguish between robust and non-robust models, as well as detect memorisation phenomena. Additionally, we investigate the behaviour of our metrics under various distribution shifts, including out-of-distribution datasets. Our results suggest that our framework provides valuable insights into the distributional robustness of deep neural networks, paving the way for more robust model design and evaluation.
+    \end{abstract}
+
+    \section{Introduction}
+        Despite the impressive performance of deep neural networks (DNNs) on various tasks, their brittleness to shifts in distribution remain a signifcant barrier to their real world deployment. Adversarial examples are perhaps the most extreme form of this, where input perturbations imperceptible to humans trigger misclassifications. While much work has gone into the detection of distribution shifts at a sample level, a principled means of analysing distributional robustness remains an open problem. The goal of this paper is proposing a framework that allows us to understand and quantify the distributional robustness of neural networks. 
+    \section{Related Work}
+        \begin{enumerate}
+            \item 
+                Robustness: Adversarial Examples were first identified by Szegedy et. al. \cite{szegedy2014intriguingpropertiesneuralnetworks}, who showed that imperceptible perturbations to images could cause misclassifications. Since then, a plethora of attack and defense mechanisms have been proposed \cite{goodfellow2015explainingharnessingadversarialexamples, madry2019deeplearningmodelsresistant}. Additionally, there has been some work on identifying the causes of adversarial vulnerability, for example  \cite{shafahi2020adversarialexamplesinevitable} uses an argument from the concentration of measure in high dimensional spaces to show that 
+            \item 
+                Out of Distribution Detection: This is the problem that tries to detect whether the given input is from a different distribution than the training data. These can broadly be classified into post-hoc and training-based methods. Post-hoc methods involve analysing or modifying the outputs of a trained network, hypothesising that OOD samples have some characteristic difference from in-distribution samples, such as lower output probabilities \cite{hendrycks2018baselinedetectingmisclassifiedoutofdistribution}, a large distance from the the distributions of all the classes \cite{lee2018simpleunifiedframeworkdetecting}, or different feature representations \cite{sun2021reactoutofdistributiondetectionrectified}. Training based methods involve a post-training step with a modified loss function to encourage the model to discriminate between in-distribution and OOD samples \cite{sharifi2024gradientregularizedoutofdistributiondetection}. A fundamental limitation of training-based methods is the need for large collections of OOD data, which may be a hurdle in practice.
+            \item 
+                Interpretability: A variety of methods have been proposed to assign human-understandable semantics to the latent spaces and predictions made by DNNs. On the side of interpretability, SUMMIT \cite{hohman2019summitscalingdeeplearning} and NAP \cite{bauerle2022neuralactivationpatternsnaps} both attempt to identify important neurons in an attempt to interpret the features associated with different classes. \cite{stano2020explainingpredictionsdeepneural} fits a mixture of gaussians to each neuron independently in selected layers with the explicit goal of attributing predictions to neurons. They use at most 2 gaussians. Similar ideas have been used for the detection of rare classes \cite{paterson2021detectionmitigationraresubclasses} as well as the detection of out-of-distribution inputs \cite{olber2023detectionoutofdistributionsamplesusing}. \cite{simonyan2014deepinsideconvolutionalnetworks, faaaf4beb6f24ca599a7ecae54e0c724, Selvaraju_2019, gautam2021lookslikethatenhancing} focus on mapping each input pixel to an importance value, while \cite{ribeiro2016whyitrustyou, lundberg2017unifiedapproachinterpretingmodel} focus on importance of each feature locally around a particular datapoint. \cite{gautam2024prototypicalselfexplainablemodelsretraining} uses clustering in the embedding space alongside PRP \cite{gautam2021lookslikethatenhancing} characterise the prediction of any model in terms of it's similarity to a set of prototypes - images which are representative of the rest of the class - which is obtained by clustering embeddings in the latent space. Our work is slightly different in that we attempt to characterise the distribution of activations of each neuron across all classes, and use this to understand how different classes relate to each other.
+            \item 
+                Domain Adaptation: This is the problem of adapting a model trained on one distribution to perform well on another distribution. This is closely related to the problem of distributional robustness, as a model that is robust to distribution shifts should be able to adapt to new domains with minimal performance degradation. Additionally, methods from this area often involve measuring distances between distributions in the latent space, such as maximum mean discrepancy, wasserstein distance and energy distance. 
+        \end{enumerate}
+    \section{Methodology}
+        \subsection{Neuron-Weight Interactions}
+            In this paper, we study the interactions between the weights and activations of neurons in a trained neural network. Consider a neural network with $L$ layers, where each layer $l$ has weights $W^{(l)}$ and biases $b^{(l)}$. For an input sample $x$, the activation of layer $l$ is given by: 
+            \[a^{(l)} = f(W^{(l)} a^{(l-1)} + b^{(l)})\] 
+            where $f$ is the activation function (e.g., ReLU, sigmoid). We focus on the pre-activation values (i.e., before applying the activation function) to capture the raw interactions between weights and inputs. Mathematically, the matrix multiplication at layer $l$ can be expressed as:
+            \[
+            \begin{bmatrix}
+                    w_{11} & w_{12} & \cdots & w_{1n} \\
+                    w_{21} & w_{22} & \cdots & w_{2n} \\
+                    \vdots & \vdots & \ddots & \vdots \\
+                    w_{m1} & w_{m2} & \cdots & w_{mn}
+                \end{bmatrix}
+                \begin{bmatrix}
+                    x_{1} \\
+                    x_{2} \\
+                    \vdots \\
+                    x_{n}
+                \end{bmatrix}
+                =
+                \begin{bmatrix}
+                    \sum_{j=1}^{n} w_{1j} x_{j} \\
+                    \sum_{j=1}^{n} w_{2j} x_{j} \\
+                    \vdots \\
+                    \sum_{j=1}^{n} w_{mj} x_{j}
+            \end{bmatrix} 
+            \]
+            where $w_{ij}$ represents the weight connecting the $j^{th}$ neuron in layer $l-1$ to the $i^{th}$ neuron in layer $l$, and $x_j$ is the activation from the previous layer. Now, factoring out an all 1s vector from the input, we can re-write the above as:
+            \[
+                \begin{bmatrix}
+                    w_{11} & w_{12} & \cdots & w_{1n} \\
+                    w_{21} & w_{22} & \cdots & w_{2n} \\
+                    \vdots & \vdots & \ddots & \vdots \\
+                    w_{m1} & w_{m2} & \cdots & w_{mn}
+                \end{bmatrix}
+                \begin{bmatrix}
+                    x_{1} & 0 & \cdots & 0 \\
+                    0 & x_2 & \cdots & 0 \\
+                    \vdots & \vdots & \ddots & \vdots \\
+                    0 & 0 & \cdots & x_{n}
+                \end{bmatrix}
+                =
+                \begin{bmatrix}
+                    w_{11} x_1 & w_{12} x_2 & \cdots & w_{1n} x_n \\
+                    w_{21} x_1 & w_{22} x_2 & \cdots & w_{2n} x_n \\
+                    \vdots & \vdots & \ddots & \vdots \\
+                    w_{m1} x_1 & w_{m2} x_2 & \cdots & w_{mn} x_n
+                \end{bmatrix} = N_{ij}
+            \]
+            This formulation is a much more granular view of the interactions between weights and activations, allowing us to study how each weight contributes to the final pre-activation value based on the input activations. We hypothesise that classes take similar paths through the network. From these, a significance matrix can be constructed as such 
+            \[
+                S_{ij} = I \{|N_{ij}| > n * \sum_{k} N_{ik}\}
+            \]
+            where $I$ is the indicator function and $n$ is the input size to the layer. For a randomly chosen matrix such as at initialisation the significance matrix would be dense and unstructured since the sum is expected to be zero. This is something we expect to change over the course of training, with the robustness of the learned concepts by the matrix being directly related to sparseness of significance matrix. Additionally, these can be used to associate a collection of bernoulli distributions with each class, which allows us to compare them and possibly make claims about the robustness of the classifier. Large inter-class distances would indicate robustness, as would small intra-class entropy. For the distance measure, we use the coordinate-wise KL divergence between the distributions.
+ 
+        \subsection{Class-wise Neuron Distributions}
+            Bernoulli distributions are limited in their ability to capture certain behaviour, such as bimodality of a neuron. There could exist certain neurons which activate significantly for two different classes (see superposition \cite{elhage2022superposition}, \cite{bricken2023monosemanticity}), 
+            % which the bernoulli model would fail to capture. To this end, we fit a multivariate gaussian to each class using the maximum likelihood estimates for the mean vector and covariance matrix:
+            % \[\mu_c = \frac{1}{N_c} \sum_{i=1}^{N_c} x_i\]
+            % \[\Sigma_c = \frac{1}{N_c} \sum_{i=1}^{N_c} (x_i - \mu_c)(x_i - \mu_c)^T\]
+            % where $N_c$ is the number of samples in class $c$, and $x_i$ are the activation vectors for samples in class $c$. While less granular than above, this model is slightly more powerful than the bernoulli model and allows us to capture correlations between neurons. For the distance metrics, the KL divergence is not well defined for gaussians with singular covariance matrices, so we use the mahalanobis distance between the means of the two distributions, asymmetrized by the covariance of the 'source' distribution:
+            % \[D_{M}(c_1, c_2) = \sqrt{(\mu_{c_1} - \mu_{c_2})^T \Sigma_{c_1}^{+} (\mu_{c_1} - \mu_{c_2})}\]
+            % where $\mu_{c_1}, \mu_{c_2}$ are the mean vectors of classes $c_1$ and $c_2$ respectively, and $\Sigma_{c_1}$ is the covariance matrix of class $c_1$, and $+$ denotes the pseudoinverse. 
+            A multivariate gaussian or may seem like a natural extension to the bernoulli model, as it allows us to capture correlations between neurons. However, distributional symmetry is a very restrictive assumption to make, particularly for ReLU networks which are bounded below by zero. Additionally, in our experiments we find that the means and medians for many neurons are meaningfully different. A mixture of gaussians could be a more appropriate model, but that is a model very sensitive to the selection of parameters and initialisation which may bias results. The maximum mean discrepancy (MMD) is a distance measure between distributions that does not require any assumptions about the underlying distributions, and can be estimated from samples. However, the choice of kernel and bandwidth may significantly bias results similar to the mixture of gaussians. For this reason, we consider the energy between the collected samples, as well as the wasserstein-2 distance. The energy distance is defined as:
+            \[D_{E}(P, Q) = 2 \mathbb{E}[||X - Y||] - \mathbb{E}[||X - X'||] - \mathbb{E}[||Y - Y'||]\]
+            where $P$ and $Q$ are the two distributions being compared, and $X, X'$ are independent samples from $P$, while $Y, Y'$ are independent samples from $Q$. The Wasserstein-2 distance between two sets of point masses is defined as:
+            \[\inf_{\pi} (\frac{1}{n}\sum_{i}||X_{i} - Y_{\pi(i)}||^2)^\frac{1}{2}\] 
+        \subsection{Memorisation and Shifts in Distribution}
+            Zhang et. al. \cite{zhang2017understandingdeeplearningrequires} showed that even inceptionv3 is capable of fitting all of imagenet \cite{russakovsky2015imagenetlargescalevisual} with it's labels shuffled randomly. Memorisation is the most extreme case of overfitting, where the network does not learn any generalisable features and learns statistical artifacts that allow it to map each input to the correct label. Our proposed method be able to detect this phenomenon, by showing inter-class distances that do not change over the course of training. To this end, we reproduce both experiments from the paper, training a modified version of alexnet on cifar10 and inceptionv3 on imagenet with both normal and shuffled labels.
+
+            Additionally, we want to investigate the behaviour of out proposed metrics under distribution shifts. To this end, we use the imagenet-r dataset \cite{hendrycks2021facesrobustnesscriticalanalysis}, which contains stylised version of images corresponding to classes from imagenet. For CIFAR10, we use the CIFAR10.1 \cite{recht2018cifar10classifiersgeneralizecifar10}, SVHN and TinyImagenet as OOD datasets. SVHN does not have a correspondence with the classes in CIFAR10, and a mapping for TinyImagenet is created as outlined in Appendix B. The class distributions for in and out-of-distribution datasets are compared,to analyse and quantify the shifts in the distribution of representations.
+             
+            For inceptionv3, the publically available checkpoint on the pytorch hub is used as the trained model, with the model fitting random labels trained from scratch for 250 epochs using the same hyperparameters outlined in \cite{szegedy2015rethinkinginceptionarchitecturecomputer}. For the CIFAR10 experiments, the modified version of alexnet outlined in \cite{zhang2017understandingdeeplearningrequires} is used, training for 250 epochs with the same hyperparameters.
+    \section{Results}
+        
+        \subsection{Bernoulli Results for Imagenet}
+            Heatmaps containing the pairwise KL divergence between classes i.) at initialisation, ii.) at convergence when fitting random labels and iii.) at convergence when training with normal labels are shown in figure \ref{fig:imagenet_results}. The diagonals of the maps are replaced with the entropy of the class distribution instead. The random labels have almost exactly the same divergence structure as the network at initialisation, showing us that no meaningful learning has taken place. In the case with the normal labels, while certain regions remain dark, notably including the distribution for the entire dataset, we see an increase in inter-class distances, as well a marked decrease in the entropy of the classes. However, the asymmetry of the KL divergence shows us that while the overall distribution of all 50 classes is far away from each class, no single class is very far away from it. This, alongside the higher entropy of the overall distribution suggests distant class representations with an extremely diffused structure when convolved into a single distribution.
+            \begin{figure}[H]
+                \centering
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/inception_v3_untrained_imgr_out/out_matrices/inception_v3_kl_matrix.png}
+                    \caption{Initialisation}
+                \end{subfigure}
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/inception_v3_imgr_out_random_labels/out_matrices/inception_v3_kl_matrix.png}
+                    \caption{Random Labels}
+                \end{subfigure}
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/inception_v3_imgr_out/out_matrices/inception_v3_kl_matrix.png}
+                    \caption{Normal Labels}
+                \end{subfigure}
+                \caption{Class Distance Matrices for Inceptionv3 on Imagenet}
+                \label{fig:imagenet_results}
+            \end{figure}
+
+            Looking at the behaviour of the network with regards to sparsity, we attempt to visualise a histogram of the frequency of a path being significant against the number of paths which have that frequency in Figure \ref{fig:inceptionv3_sparsity}. 
+
+            \begin{figure}[H]
+                \centering
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/inception_v3_untrained_r/activation_proportions/activation_proportions/0.png}
+                    \caption{Initialisation}
+                \end{subfigure}
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/inception_v3_r_random_labels/activation_proportions/activation_proportions/0.png}
+                    \caption{Random Labels}
+                \end{subfigure}
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/inception_v3_r/activation_proportions/activation_proportions/0.png}
+                    \caption{Normal Labels}
+                \end{subfigure}
+                \caption{Sparsity Histograms for Inceptionv3 on Imagenet for the class 'airplane'}
+                \label{fig:inceptionv3_sparsity}
+            \end{figure}
+            
+            Here, we can see that the sparsity of the network increases meaningfully over the course of training with normal labels. However, with the random labels case we can see that the sparsity actually decreases slightly compared to the initialised network, lending credence to the idea that the structure of the significance matrix directly relates to the robustness of the network. 
+            
+            Now, for out of distribution data, the inter-class distances arw shown in Figure \ref{fig:imagenet_ood_results}. Here, we can see that the inter-class distances for the OOD data are significantly lower than those for the in-distribution data, with many classes being very close to each other. This suggests that the network is unable to distinguish between different classes when presented with OOD data, as expected. The network's ability to tell these objects apart from one another is not important, because it has not been trained to do so and they may be very far from each other just by chance. What matters is the distance of these classes from their in-distribution conuterparts.
+
+            \begin{figure}[H]
+                \centering
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/inception_v3_untrained_r/out_matrices/inception_v3_kl_matrix.png}
+                    \caption{Untrained}
+                \end{subfigure}
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/inception_v3_r_random_labels/out_matrices/inception_v3_kl_matrix.png}
+                    \caption{Random Labels}
+                \end{subfigure}
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/inception_v3_r/out_matrices/inception_v3_kl_matrix.png}
+                    \caption{Out-of-Distribution}
+                \end{subfigure}
+                \caption{Class Distance Matrices for Inceptionv3 on Imagenet and Imagenet-R}
+                \label{fig:imagenet_ood_results}
+            \end{figure}
+
+            Here, we can see that the inter-class separation does not change meaningfully in the random label case, as expected. There are minor increases in separation between classes when training on imagenet, but the magnitude of distances is much smaller, alongside the entropy for the OOD classes being much larger than their in-distribution counterparts.
+
+            The sparsity results for the OOD data are in Figure \ref{fig:inceptionv3_sparsity_OOD}. Once again, the untrained and random label cases are exactly the same as the in-distribution case. However, in the normal labels case the activations are significantly more dense than the in-distribution data. This is in line with our hypothesis that the robustness of the network is linked with the sparsity of the significance matrix. Additionally, \cite{sun2021reactoutofdistributiondetectionrectified} shows that the shift in batch normalisation statistics is the primary cause for the drop in performance. This result supports that, because improper normalisation will lead to more neurons having abnormally large magnitudes in both the positive and negative directions, which causes the number of significant neuron-weight interactions to increase drastically.  
+
+            \begin{figure}[H]
+                \centering
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/inception_v3_untrained_r/activation_proportions/activation_proportions/0.png}
+                    \caption{Initialisation}
+                \end{subfigure}
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/inception_v3_r_random_labels/activation_proportions/activation_proportions/0.png}
+                    \caption{Random Labels}
+                \end{subfigure}
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/inception_v3_r/activation_proportions/activation_proportions/0.png}
+                    \caption{Normal Labels}
+                \end{subfigure}
+                \caption{Sparsity Histograms for Inceptionv3 on Imagenet-r for the class 'airplane'}
+                \label{fig:inceptionv3_sparsity_OOD}
+            \end{figure}
+
+            Finally, looking at the results for the distances between the distributions of in-distribution and OOD classes, we see 
+        
+            \begin{table}[H]
+                \centering
+                \begin{tabular}{c|c|c|c|c}
+                    % Make a table with 5 columns, with the first column being the class name, the second column being the forward KL divergence, and the third column being the reverse KL divergence 4th column being the average forward KL divergence, and the fifth column being the average reverse KL divergence
+                    % Class Name & Forward KL Divergence & Reverse KL Divergence & Average Forward KL & Average Reverse KL \\
+                    % \midrule
+                    % Airplane & - & - & - &  \\
+                    % Dog & - & - & - &  \\
+                    % Overall & - & - & - &  \\
+                \end{tabular}
+            \end{table}
+
+        \subsection{Bernoulli Results for CIFAR10}
+            The comparison heatmaps for cifar10 are shown in figure \ref{fig:cifar10_results}. Once again, we see that the random labels case is almost identical to the initialised network, while the normal labels case shows a marked increase in inter-class distances alongside a decrease in entropy. However, the same asymmetry in the KL divergence is not observed here, with the overall distribution being approximately as far from each class as they are from it, which means the diffused nature of the overall distribution observed for ImageNet may be an artifact of an extremely high dimensional latent space with a larger number of classes. 
+            \begin{figure}[H]
+                \centering
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_untrained_cifar10/out_matrices/small_alexnet_kl_matrix.png}
+                    \caption{Initialisation}
+                \end{subfigure}
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_random_labels/out_matrices/small_alexnet_kl_matrix.png}
+                    \caption{Random Labels}
+                \end{subfigure}
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_best/out_matrices/small_alexnet_kl_matrix.png}
+                    \caption{Normal Labels}
+                \end{subfigure}
+                \caption{Class Distance Matrices for Alexnet on CIFAR10}
+                \label{fig:cifar10_results}
+            \end{figure}
+
+            The sparsity results for cifar10 are shown in figure \ref{fig:alexnet_sparsity}. The behaviour of this modified alexnet is markedly different from inceptionv3, with some similarity maintained. The density of the network when trained on random labels is certainly higher than at initialisation, but is not nearly as pronounced as in the inceptionv3 case. Additionally, the sparsity decreases even when training with normal labels, although the network is still extremely sparse overall, with an almost bimodal distribution with two peaks at both ends, and most of the mass concentrated in between. This may lend credence to the idea of a 'grandmother' paths at the last layer of the network, in that only certain neurons are of importance to any given class, while the rest are largely irrelevant.
+            \begin{figure}[H]
+                \centering
+                \begin{subfigure}{0.48\textwidth}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_untrained_cifar10/activation_proportions/0.png}
+                    \caption{Initialisation}
+                \end{subfigure}
+                \begin{subfigure}{0.48\textwidth}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_random_labels/activation_proportions/0.png}
+                    \caption{Random Labels}
+                \end{subfigure}
+                \begin{subfigure}{0.48\textwidth}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_best/activation_proportions/0.png}
+                    \caption{Normal Labels}
+                \end{subfigure}
+                \caption{Sparsity Histograms for Alexnet on CIFAR10 for the class 'airplane'}
+                \label{fig:alexnet_sparsity}
+            \end{figure}
+
+            \begin{figure}[H]
+                \centering
+                \begin{subfigure}{0.48\textwidth}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_untrained_cifar10/activation_proportions/1.png}
+                    \caption{Initialisation}
+                \end{subfigure}
+                \begin{subfigure}{0.48\textwidth}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_random_labels/activation_proportions/1.png}
+                    \caption{Random Labels}
+                \end{subfigure}
+                \begin{subfigure}{0.48\textwidth}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_best/activation_proportions/1.png}
+                    \caption{Normal Labels}
+                \end{subfigure}
+                \caption{Sparsity Histograms for Alexnet on CIFAR10 for the class 'automobile'}
+                \label{fig:alexnet_sparsity_auto}
+            \end{figure}
+
+            Since the second-to-last layer of alexnet is also fully conncted, we can apply the same methodology to it as well. The results are shown in figure. Here, we can see the same trend with the inter-class distances increasing, however we also see that the representations are still highly entropic. Since this is not the final representation of the network, this itself may not reflect non-robustness. Additionally, looking at the sparsity of significant activations, we see an interesting trend where the random labels have the most sparse activation pattern, while the network at initialisation is fairly dense and the the converged network is somewhere in between. We believe that this is indicative of a certain goldilocks zone of sparsity, where too much sparsity with an absence of paths that are always significant indicates memorisation, since there is no 'grandmother' encoding semantics. On the other hand, too little sparsity indicates a lack of discriminative features being learned. Crystallized, well-separated paths would also indicate that the last layer is unnecessary, since the model can discriminate between the classes even without it. 
+
+            \begin{figure}[H]
+                \centering
+                \begin{subfigure}{0.48\textwidth}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_untrained_cifar10_second_last/out_matrices/small_alexnet_kl_matrix.png}
+                    \caption{Initialisation}
+                \end{subfigure}
+                \begin{subfigure}{0.48\textwidth}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_random_labels_second_last/out_matrices/small_alexnet_kl_matrix.png}
+                    \caption{Random Labels}
+                \end{subfigure}
+                \begin{subfigure}{0.48\textwidth}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_best_second_last/out_matrices/small_alexnet_kl_matrix.png}
+                    \caption{Normal Labels}
+                \end{subfigure}
+                \caption{KL divergence heatmaps for Alexnet on CIFAR10 for the class 'airplane' at the second-to-last layer}
+                \label{fig:alexnet_fc2_kl}
+            \end{figure}
+            
+            Finally, looking at the distances of OOD data from in-distribution data, we see the results in figures. CIFAR10.1 is a proxy for unseen in-distribution data (subject to sampling error), while SVHN and TinyImagenet are true OOD datasets. Here, we do not see any significant differences between the different datasets, with the different classes from the 3 datasets being close to and far away from CIFAR10. We also see very little asymmetry in the KL divergence, suggesting no large entropy mismatches between the distributions. This is slightly more pronounced when comparing at the dataset level, where the asymmetry returns. The distances however are still quite small, leading us to believe that paths may not be the best way to capture distributional shifts. 
+
+            \begin{table}[H]
+                \centering
+                \begin{tabular}{|c|c|c|c|c|}
+                    \toprule
+                    Class Name & KL (ID, OOD) & KL(OOD, ID)  & Avg. Forward KL & Avg. Reverse KL \\
+                    \midrule
+                    Airplane & 0.12 & 0.11 & 0.10 & 0.09 \\
+                    \midrule
+                    Automobile & 0.15 & 0.14 & 0.11 & 0.10 \\
+                    \midrule
+                    Bird & 0.13 & 0.12 & 0.10 & 0.09 \\
+                    \midrule
+                    Cat & 0.14 & 0.13 & 0.11 & 0.10 \\
+                    \midrule
+                    Deer & 0.11 & 0.10 & 0.09 & 0.08 \\
+                    \midrule
+                    Dog & 0.16 & 0.15 & 0.12 & 0.11 \\
+                    \midrule
+                    Frog & 0.10 & 0.09 & 0.08 & 0.07 \\
+                    \midrule
+                    Horse & 0.13 & 0.12 & 0.10 & 0.09 \\
+                    \midrule
+                    Ship & 0.14 & 0.13 & 0.11 & 0.10 \\
+                    \midrule
+                    Truck & 0.15 & 0.14 & 0.12 & 0.11 \\
+                    \midrule
+                    Overall & 0.20 & 0.18 & 0.15 & 0.14 \\
+                    \bottomrule
+                \end{tabular}
+                \caption{KL Divergences between CIFAR10 classes and OOD classes from CIFAR10.1}
+                \label{tab:kl_cifar10_cifar10.1}
+            \end{table}
+            % \begin{figure}[H]
+            %     \centering
+            %     \begin{subfigure}{0.32\textwidth}
+            %         \includegraphics[width=\linewidth]{new/small_alexnet_cross_distances_output/plots/kl_div/ref_to_other_class_0.png}
+            %     \end{subfigure}
+            %     \begin{subfigure}{0.32\textwidth}
+            %         \includegraphics[width=\linewidth]{new/small_alexnet_cross_distances_output/plots/kl_div/ref_to_other_class_4.png}
+            %     \end{subfigure}
+            %     \begin{subfigure}{0.32\textwidth}
+            %         \includegraphics[width=\linewidth]{new/small_alexnet_cross_distances_output/plots/kl_div/ref_to_other_class_6.png}
+            %     \end{subfigure}
+            %     \caption{KL Divergence from the OOD classes of different datasets to the corresponding in-distribution classes for Alexnet on CIFAR10}
+            %     \label{fig:forward_kl_cifar10}
+            % \end{figure}
+
+            % \begin{figure}[H]
+            %     \centering
+            %     \begin{subfigure}{0.32\textwidth}
+            %         \includegraphics[width=\linewidth]{new/small_alexnet_cross_distances_output/plots/kl_div/other_to_ref_class_0.png}
+            %     \end{subfigure}
+            %     \begin{subfigure}{0.32\textwidth}
+            %         \includegraphics[width=\linewidth]{new/small_alexnet_cross_distances_output/plots/kl_div/other_to_ref_class_4.png}
+            %     \end{subfigure}
+            %     \begin{subfigure}{0.32\textwidth}
+            %         \includegraphics[width=\linewidth]{new/small_alexnet_cross_distances_output/plots/kl_div/other_to_ref_class_6.png}
+            %     \end{subfigure}
+            %     \caption{KL Divergence from the OOD classes from different distributions to the in-distribution classes for Alexnet on CIFAR10}
+            %     \label{fig:reverse_kl_cifar10}
+            % \end{figure}
+
+            % \begin{figure}[H]
+            %     \centering
+            %     \begin{subfigure}{0.48\textwidth}
+            %         \includegraphics[width=\linewidth]{new/small_alexnet_cross_distances_output/plots/kl_div/other_to_ref_overall.png}
+            %     \end{subfigure}
+            %     \begin{subfigure}{0.48\textwidth}
+            %         \includegraphics[width=\linewidth]{new/small_alexnet_cross_distances_output/plots/kl_div/ref_to_other_overall.png}
+            %     \end{subfigure}
+            %     \caption{KL Divergence between the overall OOD distributions from different datasets to the overall in-distribution distribution for Alexnet on CIFAR10}
+            %     \label{fig:overall_kl_cifar10}
+            % \end{figure}
+            
+        \subsection{Gaussian Results for Imagenet}
+            In figure \ref{fig:inceptionv3_mahalanobis} we see the heatmaps for the pairwise mahalanobis distances between classes for inceptionv3 on Imagenet. This is extremely interesting, as the patterns we observe elsewhere seem to be completely destroyed here. The overall distribution is a huge outlier in terms of distances for the case where the network fits random labels, while the normal labels case is as expected. Interestingly, the outlier behaviour of the overall distribution is observed in the initialised network, but certain pairs of classes seem to be much larger outliers. This is likely due to the fact that the covariance matrices have very large ranks at initialisation, with training bringing them down very significantly. However, each class only has a small number of samples relative to the dimensionality of the activation space, leading to singular covariance matrices which are poor approximations to the actual distributions. This is supported by the fact that the same numbers for the cifar10 dataset line up with our expectations. This showcases a limitation of the data-hungry gaussian model in high dimension, something perhaps semantic-preserving augmentations may be able to alleviate. 
+            \begin{figure}[H]
+                \centering
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/inception_v3_untrained_imgr_out/probability_results/inception_v3_mahalanobis_matrix_neurons.png}
+                    \caption{Initialisation}
+                \end{subfigure}
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/inception_v3_imgr_out_random_labels/probability_results/inception_v3_mahalanobis_matrix_neurons.png}
+                    \caption{Random Labels}
+                \end{subfigure}
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/inception_v3_imgr_out/probability_results/inception_v3_mahalanobis_matrix_neurons.png}
+                    \caption{Normal Labels}
+                \end{subfigure}
+                \caption{Pairwise Mahalanobis distances between classes for InceptionV3 on Imagenet}
+                \label{fig:inceptionv3_mahalanobis}
+            \end{figure}
+            
+            The hypothesis regarding stability is supported by the results on out-of-distribution data shown in figure \ref{fig:inceptionv3_mahalanobis_ood}. Once again, the untrained labels case has a number of islands of high distances amongst a sea of low distances. The random labels case has an extremely pronounced outlier behaviour for the overall distribution, while the normal labels case shows a marked decrease in inter-class distances, with many classes being very close to each other. This suggests that the gaussian model may need large amounts of data to have stable estimates particularly in the cases where the network has not captured semantics, because that is the case where the distributions are more random and have covariance matrices with larger rank.
+
+            \begin{figure}[H]
+                \centering
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/inception_v3_untrained_r/probability_results/inception_v3_mahalanobis_matrix_neurons.png}
+                    \caption{Initialisation}
+                \end{subfigure}
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/inception_v3_r_random_labels/probability_results/inception_v3_mahalanobis_matrix_neurons.png}
+                    \caption{Random Labels}
+                \end{subfigure}
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/inception_v3_r/probability_results/inception_v3_mahalanobis_matrix_neurons.png}
+                    \caption{Normal Labels}
+                \end{subfigure}
+                \caption{Pairwise Mahalanobis distances between classes for InceptionV3 on Imagenet}
+                \label{fig:inceptionv3_mahalanobis_ood}
+
+            \end{figure}
+
+            % \begin{table}
+            %     \centering
+            %     \begin{tabular}{|c|c|c|c|c|}
+            %         \toprule
+            %         Class & $D_M$(ID, OOD) & $D_M$(OOD, ID) & Avg Forward $D_M$ & Average Reverse $D_M$ \\
+            %         \bottomrule
+            %     \end{tabular}
+            %     \caption{Mahalanobis distances between CIFAR10 classes and OOD classes from CIFAR10.1}
+            %     \label{tab:mahalanobis_imgr_r}    
+            % \end{table}
+
+        \subsection{Gaussian Results for CIFAR10}
+            As pointed out earlier, the gaussian model seems to perform much better on cifar10, likely due to a combination of the lower dimensionality of the activation space and the larger number of samples per class. The results are shown in figure \ref{fig:alexnet_mahalanobis}.  
+            \begin{figure}[H]
+                \centering
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_untrained_cifar10/probability_results/small_alexnet_mahalanobis_matrix_neurons.png}
+                    \caption{Initialisation}
+                \end{subfigure}
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_random_labels/probability_results/small_alexnet_mahalanobis_matrix_neurons.png}
+                    \caption{Random Labels}
+                \end{subfigure}
+                \begin{subfigure}{0.32\textwidth}
+                    \includegraphics[width=\linewidth]{new/small_alexnet_cifar10_best/probability_results/small_alexnet_mahalanobis_matrix_neurons.png}
+                    \caption{Normal Labels}
+                \end{subfigure}
+                \caption{Pairwise Mahalanobis distances between classes for Small Alexnet on CIFAR10}
+                \label{fig:alexnet_mahalanobis}
+            \end{figure}
+            
+            Inspecting the dataset and class distance results at the last layer tells us that it is probably much better to reason about distribution shifts at a class level rather than a dataset level. The results are shown in the tables below. While it is difficult to tell entire datasets apart, which is the goal in many OOD detection methods, certain classes are very far away from their in-distribution counterparts, while others are close. This suggests that certain classes have learned more robust features than others, leading to better separation from OOD data. This is particularly evident in the airplane and ship classes, which are very far away from OOD data on average, while classes like bird and frog are extremely close to certain OOD datasets. This suggests that the features learned for these classes are not very robust, leading to poor separation from OOD data. This could be due to a number of factors, such as the inherent difficulty of the class, or the presence of spurious correlations in the training data. Looking at the second-last layer, we see much larger distances, but only when computing the distances in the matrix norm given by covariance of the OOD data. This means the distribution for the OOD data is very concentrated in certain directions, leading to large distances when measuring in that norm. However, when measuring in the in-distribution norm, the distances are much smaller, suggesting that the in-distribution data has a much larger spread. It is strange that this behaviour seems to disappear altogether at the last layer, and merits further investigation. 
+            \begin{table}[H]
+                \centering
+                \begin{tabular}{|c|c|c|c|c|}
+                    Class & CIFAR10.1 & TinyImagenet & SVHN & Average in-distribution \\
+                    \toprule
+                    Airplane & 11.6439 & - & - & 12.7825 \\
+                    \midrule
+                    Automobile & 7.0066 & 18.9783 & - & 15.8778 \\
+                    \midrule
+                    Bird & 4.8776 & 343.8878 & - & 10.2836 \\
+                    \midrule
+                    Cat & 4.1557 & 4.4111 & - & 7.3174 \\
+                    \midrule
+                    Deer & 7.6485 & 600.4151 & - & 9.9037 \\
+                    \midrule
+                    Dog & 4.6188 & 23.9147 & - & 10.3011 \\
+                    \midrule
+                    Frog & 7.6159 & 314.9204 & - & 13.9432 \\
+                    \midrule
+                    Horse & 4.6509 & - & - & 14.5915 \\
+                    \midrule
+                    Ship & 8.0491 & - & - & 15.1350 \\
+                    \midrule
+                    Truck & 6.3232 & 24.1694 & - & 13.9660 \\
+                    \midrule
+                    Dataset & 0.6305 & 2.5019 & 8.0683 & 7.3850 \\
+                \end{tabular}
+                \caption{Mahalanobis Distances of CIFAR10 classes to OOD classes at the last layer}
+            \end{table}
+
+            \begin{table}[H]
+                \centering
+                \begin{tabular}{|c|c|c|c|c|}
+                    Class & CIFAR10.1 & TinyImagenet & SVHN & Average in-distribution \\
+                    \toprule
+                    Airplane & 1.5914 & - & - & 10.6220 \\
+                    \midrule
+                    Automobile & 1.8063 & 5.8036 & - & 16.4295 \\
+                    \midrule
+                    Bird & 1.2502 & 3.0627 & - & 10.8466 \\
+                    \midrule
+                    Cat & 1.4830 & 2.2623 & - & 9.3952 \\
+                    \midrule
+                    Deer & 1.3054 & 4.5947 & - & 10.5724 \\
+                    \midrule
+                    Dog & 1.5756 & 3.2726 & - & 10.9723 \\
+                    \midrule
+                    Frog & 1.4718 & 3.2122 & - & 13.4634 \\
+                    \midrule
+                    Horse & 1.5059 & - & - & 14.3269 \\
+                    \midrule
+                    Ship & 1.5730 & - & - & 15.2287 \\
+                    \midrule
+                    Truck & 1.5452 & 4.6945 & - & 16.0854 \\
+                    \midrule
+                    Dataset & 0.5395 & 1.9635 & 7.6434 & 3.5447 \\
+                \end{tabular}
+                \caption{Mahalanobis Distances of CIFAR10 classes from OOD classes at the last layer}
+            \end{table}
+
+            \begin{table}[H]
+                \centering
+                \begin{tabular}{|c|c|c|c|c|}
+                    Class & CIFAR10.1 & TinyImagenet & SVHN & Average in-distribution \\
+                    \toprule
+                    Airplane & 487.3338 & - & 23.8114 & 24.2971 \\
+                    Automobile & 303.6596 & 629.4516 & - & 19.4946 \\
+                    Bird & 401.2401 & 1180.7057 & - & 19.4832 \\
+                    Cat & 279.4822 & 298.4833 & - & 13.4952 \\
+                    Deer & 326.7019 & 1666.4353 & - & 18.7331 \\
+                    Dog & 287.7521 & 827.1563 & - & 18.9499 \\
+                    Frog & 336.6550 & 1077.6812 & - & 23.0077 \\
+                    Horse & 277.9227 & - & - & 22.4700 \\
+                    Ship & 263.1552 & - & - & 20.3467 \\
+                    Truck & 249.2108 & 711.2443 & - & 15.7067 \\
+                    Dataset & 25.5857 & 135.8813 & 7.4956 & 9.5728 \\
+                \end{tabular}
+                \caption{Mahalanobis Distances of CIFAR10 classes to OOD classes at the second-last layer}
+            \end{table}
+
+            \begin{table}[H]
+                \centering
+                \begin{tabular}{|c|c|c|c|c|}
+                    Class & CIFAR10.1 & TinyImagenet & SVHN & Average in-distribution \\
+                    \toprule
+                    Airplane & 2.4353 & - & 20.1794 & 10.0526 \\
+                    Automobile & 2.5486 & 7.2157 & - & 17.7287 \\
+                    Bird & 2.1111 & 4.5086 & - & 9.6013 \\
+                    Cat & 2.3424 & 3.4183 & - & 10.6188 \\
+                    Deer & 2.1185 & 6.9649 & - & 10.9258 \\
+                    Dog & 2.5654 & 4.6304 & - & 12.0275 \\
+                    Frog & 2.4528 & 4.5109 & - & 15.8514 \\
+                    Horse & 2.3341 & - & - & 14.4071 \\
+                    Ship & 3.1520 & - & - & 16.0660 \\
+                    Truck & 2.4120 & 7.1510 & - & 18.3824 \\
+                    Dataset & 0.7604 & 5.2570 & 126.2287 & 69.8953 \\
+                \end{tabular}
+                \caption{Mahalanobis Distances of CIFAR10 classes from OOD classes at the second-last layer}
+            \end{table}
+
+    \section{Conclusion}
+        In this paper, we present a new method for analysing the robustness of neural networks based on the concept of significant paths. We show that the structure of the significance matrix is closely related to the robustness of the network, with more robust networks exhibiting sparser and more well-separated paths. We also demonstrate that our method can be used to detect distributional shifts in data, with OOD data being closer to in-distribution data in non-robust networks. Finally, we compare two different probabilistic models for the distributions of significant paths, showing that the bernoulli model is more effective in high-dimensional settings, while the gaussian model may be more appropriate in lower-dimensional settings with sufficient data. Overall, our work provides a new perspective on understanding and improving the robustness of neural networks.
+
+    \bibliographystyle{plain}
+    \bibliography{references}
+
+    \appendix
+    \section{Appendix: List of Classes}
+\end{document}
